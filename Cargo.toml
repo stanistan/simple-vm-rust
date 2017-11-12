@@ -1,6 +1,10 @@
 [package]
-name = "simple-vm"
+name = "simple_vm"
 version = "0.1.0"
 authors = ["Stan Rozenraukh <stan@stanistan.com>"]
+
+[[bin]]
+name = "simple_vm"
+path = "src/bin.rs"
 
 [dependencies]
