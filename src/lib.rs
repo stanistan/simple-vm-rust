@@ -10,25 +10,27 @@ use std::str::FromStr;
 enum StackOperationResult {
     Push(StackValue),
     SideEffect(()),
+    Jump(usize),
 }
 
 macro_rules! stack_operations {
-    (match $stack:ident, $e:expr, $t:pat) => {
-        match $stack.pop() {
+    (match $machine:ident, $e:expr, $t:pat) => {
+        match $machine.stack.pop() {
             Some($t) => match $e {
-                Push(val)=> $stack.push(val),
+                Push(val) => $machine.stack.push(val),
+                Jump(address) => $machine.jump(address),
                 _ => { }
             },
-            None => panic!("No value to pop off the stack"),
-            _ => panic!("Invalid argument type")
+            None => panic!("No value to pop off the stack: {} in {}", stringify!($t), stringify!($e)),
+            _ => panic!("Invalid argument type: {}", stringify!($t))
         }
     };
 
-    (match $stack:ident, $e:expr, $t:pat, $($rest:pat),+) => {
-        match $stack.pop() {
-            Some($t) => stack_operations! { match $stack, $e, $($rest)+ },
-            None => panic!("No value to pop off the stack"),
-            _ => panic!("Invalid argument type")
+    (match $machine:ident, $e:expr, $t:pat, $($rest:pat),+) => {
+        match $machine.stack.pop() {
+            Some($t) => stack_operations! { match $machine, $e, $($rest)+ },
+            None => panic!("No value to pop off the stack: {} in {}", stringify!($t), stringify!($e)),
+            _ => panic!("Invalid argument type: {}", stringify!($t))
         }
     };
 
@@ -54,12 +56,12 @@ macro_rules! stack_operations {
 
         impl StackOperation {
             #[allow(unreachable_patterns)]
-            pub fn dispatch(&self, stack: &mut Vec<StackValue>) {
+            pub fn dispatch(&self, machine: &mut Machine) {
                 use StackValue::*;
                 use StackOperationResult::*;
                 match *self {
                     $(StackOperation::$t => {
-                        stack_operations! { match stack, $e, $($type),+  }
+                        stack_operations! { match machine, $e, $($type),+  }
                     },)+
                 }
             }
@@ -69,8 +71,13 @@ macro_rules! stack_operations {
 
 stack_operations! {
     Plus + (Num(a), Num(b)) Push(Num(a + b)),
-    Minus - (Num(a), Num(b)) Push(Num(b - a)),
-    Prinln println (a @ _) SideEffect(println!("{}", a))
+    Minus - (Num(a), Num(b)) Push(Num(a - b)),
+    Multiply * (Num(a), Num(b)) Push(Num(a * b)),
+    Divide / (Num(a), Num(b)) Push(Num(a / b)),
+    ToInt cast_int (String(a)) Push(Num(a.parse::<isize>().unwrap_or(0))),
+    ToStr cast_str (a @ _) Push(String(format!("{}", a))),
+    Println println (a @ _) SideEffect(println!("{}", a)),
+    Jump jmp (Num(a)) Jump(a as usize)
 }
 
 /// A value that can live on the stack.
@@ -127,7 +134,7 @@ impl FromStr for StackValue {
 pub type Stack = Vec<StackValue>;
 
 pub struct Machine {
-    stack: Stack,
+    pub stack: Stack,
     code: Vec<String>,
     instruction_ptr: usize,
 }
@@ -141,15 +148,21 @@ impl Machine {
         }
     }
 
+    pub fn jump(&mut self, address: usize) {
+        self.instruction_ptr = address;
+    }
+
     pub fn run(&mut self) {
         while self.instruction_ptr < self.code.len() {
-            let instruction = self.code.get(self.instruction_ptr).unwrap();
-            let op = StackValue::from_str(instruction).unwrap();
-            match op {
-                StackValue::Operation(op) => op.dispatch(&mut self.stack),
-                _ => self.stack.push(op)
+            let op = {
+                let instruction = self.code.get(self.instruction_ptr).unwrap();
+                StackValue::from_str(instruction).unwrap()
             };
             self.instruction_ptr = self.instruction_ptr + 1;
+            match op {
+                StackValue::Operation(op) => op.dispatch(self),
+                _ => self.stack.push(op)
+            };
         }
     }
 
@@ -160,10 +173,33 @@ pub fn run(code: Vec<String>) {
     machine.run();
 }
 
-#[test]
-pub fn test_program() {
-    let code = vec![ "1".to_owned(), "2".to_owned(), "+".to_owned() ];
-    let mut machine = Machine::new(code);
-    machine.run();
-    assert_eq!(StackValue::Num(3), machine.stack[0]);
+#[cfg(test)]
+mod test {
+
+    use Machine;
+
+    macro_rules! test_run {
+        ($($name:ident $v:expr, [ $($code:expr)+ ],)+) => {
+            $(
+                #[test]
+                fn $name() {
+                    use StackValue::*;
+                    let mut code = vec![];
+                    $( code.push($code.to_owned()); )+
+                    let mut machine = Machine::new(code);
+                    machine.run();
+                    assert_eq!($v, machine.stack[0]);
+                }
+            )+
+        };
+    }
+
+    test_run! {
+        test_addition Num(3), [ "1" "2" "+" ],
+        test_cast_to_int Num(1), [ "\"1\"" "cast_int" ],
+        test_cast_to_int_defaults_to_zero Num(0), [ "\"asdf\"" "cast_int" ],
+        test_cast_to_str String("1".to_owned()), [ "1" "cast_str" ],
+        test_cast_to_backwards Num(1), [ "1" "cast_str" "cast_int" ],
+    }
+
 }
