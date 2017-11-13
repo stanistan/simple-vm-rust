@@ -12,30 +12,9 @@ enum StackOperationResult {
     SideEffect(()),
 }
 
-//
-// Each stack operation should potentially have a function pointer
-// and types that it expects, it'd be nice to have a macro dsl
-// for defining it...  Something like:
-//
-//  ```
-//  stack_operations! {
-//      Plus "+" (a: Num, b: Num) => stack.push(Num(a + b)),
-//      Minus "-" (a: Num, b: Num) => stack.push(Num(a - b)),
-//      Print "print" (a: Num|String) => print!("{}", a),
-//  }
-//  ```
-//
-// This should end up:
-//
-// 1. Generating the regular `enum` block containing all stack operations.
-// 2. Generating the `from_str` block for all of the second part
-// 3. Generate an impl block with a `dispatch` function
-//
 macro_rules! stack_operations {
     (match $stack:ident, $e:expr, $t:pat) => {
         match $stack.pop() {
-            // TODO, make this something that dispatches on an enum
-            // so that the thing doesn't need to blablabla
             Some($t) => match $e {
                 Push(val)=> $stack.push(val),
                 _ => { }
