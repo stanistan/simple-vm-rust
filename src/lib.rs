@@ -8,37 +8,43 @@
 use std::str::FromStr;
 
 enum StackOperationResult {
+    Jump(usize),
+    Append(Vec<StackValue>),
     Push(StackValue),
     SideEffect(()),
-    Jump(usize),
 }
 
 macro_rules! stack_operations {
+    (match $machine:ident, $e:expr) => {
+        match $e {
+            Append(mut values) => $machine.stack.append(&mut values),
+            Push(val) => $machine.stack.push(val),
+            Jump(address) => $machine.jump(address),
+            _ => { }
+        }
+    };
+
     (match $machine:ident, $e:expr, $t:pat) => {
         match $machine.stack.pop() {
-            Some($t) => match $e {
-                Push(val) => $machine.stack.push(val),
-                Jump(address) => $machine.jump(address),
-                _ => { }
-            },
+            Some($t) => stack_operations! { match $machine, $e },
             None => panic!("No value to pop off the stack: {} in {}", stringify!($t), stringify!($e)),
             _ => panic!("Invalid argument type: {}", stringify!($t))
         }
     };
 
-    (match $machine:ident, $e:expr, $t:pat, $($rest:pat),+) => {
+    (match $machine:ident, $e:expr, $t:pat, $($rest:pat),*) => {
         match $machine.stack.pop() {
-            Some($t) => stack_operations! { match $machine, $e, $($rest)+ },
+            Some($t) => stack_operations! { match $machine, $e, $($rest)* },
             None => panic!("No value to pop off the stack: {} in {}", stringify!($t), stringify!($e)),
             _ => panic!("Invalid argument type: {}", stringify!($t))
         }
     };
 
     (
-        $($t:ident $s:tt ($($type:pat),*) $e:expr),+
+        $($t:ident $s:tt ($($type:pat),*) $e:expr,)+
     ) => {
 
-        #[derive(PartialEq, Debug)]
+        #[derive(Clone, PartialEq, Debug)]
         pub enum StackOperation {
             $( $t, )+
         }
@@ -55,13 +61,13 @@ macro_rules! stack_operations {
         }
 
         impl StackOperation {
-            #[allow(unreachable_patterns)]
+            #[allow(unreachable_patterns, unreachable_code)]
             pub fn dispatch(&self, machine: &mut Machine) {
                 use StackValue::*;
                 use StackOperationResult::*;
                 match *self {
                     $(StackOperation::$t => {
-                        stack_operations! { match machine, $e, $($type),+  }
+                        stack_operations! { match machine, $e, $($type),*  }
                     },)+
                 }
             }
@@ -77,11 +83,14 @@ stack_operations! {
     ToInt cast_int (String(a)) Push(Num(a.parse::<isize>().unwrap_or(0))),
     ToStr cast_str (a @ _) Push(String(format!("{}", a))),
     Println println (a @ _) SideEffect(println!("{}", a)),
-    Jump jmp (Num(a)) Jump(a as usize)
+    Jump jmp (Num(a)) Jump(a as usize),
+    Dup dup (any @ _) Append(vec![any.clone(), any]),
+    SleepMS sleep_ms (Num(a)) SideEffect(std::thread::sleep(std::time::Duration::from_millis(a as u64))),
+    Halt halt (Num(exit_code)) SideEffect(std::process::exit(exit_code as i32)),
 }
 
 /// A value that can live on the stack.
-#[derive(PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum StackValue {
     Num(isize),
     Operation(StackOperation),
@@ -185,6 +194,7 @@ mod test {
         test_cast_to_int_defaults_to_zero Num(0), [ "\"asdf\"" "cast_int" ],
         test_cast_to_str String("1".to_owned()), [ "1" "cast_str" ],
         test_cast_to_backwards Num(1), [ "1" "cast_str" "cast_int" ],
+        test_dup Num(4), [ "1" "dup" "+" "dup" "+"],
     }
 
 }
