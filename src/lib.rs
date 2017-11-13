@@ -7,16 +7,99 @@
 
 use std::str::FromStr;
 
-/// Something that operates on the stack
-#[derive(PartialEq, Debug)]
-pub enum StackOperation {
-    Plus,
-    Minus,
-    Print,
-    Println,
+enum StackOperationResult {
+    Push(StackValue),
+    SideEffect(()),
+}
+
+//
+// Each stack operation should potentially have a function pointer
+// and types that it expects, it'd be nice to have a macro dsl
+// for defining it...  Something like:
+//
+//  ```
+//  stack_operations! {
+//      Plus "+" (a: Num, b: Num) => stack.push(Num(a + b)),
+//      Minus "-" (a: Num, b: Num) => stack.push(Num(a - b)),
+//      Print "print" (a: Num|String) => print!("{}", a),
+//  }
+//  ```
+//
+// This should end up:
+//
+// 1. Generating the regular `enum` block containing all stack operations.
+// 2. Generating the `from_str` block for all of the second part
+// 3. Generate an impl block with a `dispatch` function
+//
+macro_rules! stack_operations {
+    (match $stack:ident, $e:expr, $t:pat) => {
+        match $stack.pop() {
+            // TODO, make this something that dispatches on an enum
+            // so that the thing doesn't need to blablabla
+            Some($t) => match $e {
+                Push(val)=> $stack.push(val),
+                _ => { }
+            },
+            None => panic!("No value to pop off the stack"),
+            _ => panic!("Invalid argument type")
+        }
+    };
+
+    (match $stack:ident, $e:expr, $t:pat, $($rest:pat),+) => {
+        match $stack.pop() {
+            Some($t) => stack_operations! { match $stack, $e, $($rest)+ },
+            None => panic!("No value to pop off the stack"),
+            _ => panic!("Invalid argument type")
+        }
+    };
+
+    (
+        $($t:ident $s:tt ($($type:pat),*) $e:expr),+
+    ) => {
+
+        // generate the enum,
+        // these have no contained data,
+        // so this is super simple!
+        #[derive(PartialEq, Debug)]
+        pub enum StackOperation {
+            $( $t, )+
+        }
+
+        impl FromStr for StackOperation {
+            type Err = ();
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                use StackOperation::*;
+                match s {
+                    $( stringify!($s) => Ok($t), )+
+                    _ => Err(())
+                }
+            }
+        }
+
+        impl StackOperation {
+            #[allow(unreachable_patterns)]
+            pub fn dispatch(&self, stack: &mut Vec<StackValue>) {
+                use StackValue::*;
+                use StackOperationResult::*;
+                match *self {
+                    $(StackOperation::$t => {
+                        stack_operations! { match stack, $e, $($type),+  }
+                    },)+
+                }
+            }
+        }
+    }
+}
+
+
+stack_operations! {
+    Plus + (Num(a), Num(b)) Push(Num(a + b)),
+    Minus - (Num(a), Num(b)) Push(Num(b - a)),
+    Prinln println (a @ _) SideEffect(println!("{}", a))
 }
 
 impl StackOperation {
+    /*
     pub fn dispatch(&self, stack: &mut Vec<StackValue>) {
         use StackOperation::*;
         use StackValue::*;
@@ -45,8 +128,10 @@ impl StackOperation {
             }
         }
     }
+    */
 }
 
+/*
 impl FromStr for StackOperation {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -59,7 +144,7 @@ impl FromStr for StackOperation {
             _ => Err(())
         }
     }
-}
+}*/
 
 /// A value that can live on the stack.
 #[derive(PartialEq, Debug)]
@@ -112,8 +197,10 @@ impl FromStr for StackValue {
     }
 }
 
+pub type Stack = Vec<StackValue>;
+
 pub struct Machine {
-    stack: Vec<StackValue>,
+    stack: Stack,
     code: Vec<String>,
     instruction_ptr: usize,
 }
@@ -121,7 +208,7 @@ pub struct Machine {
 impl Machine {
     pub fn new(code: Vec<String>) -> Self {
         Machine {
-            stack: Vec::new(),
+            stack: Stack::new(),
             code: code,
             instruction_ptr: 0
         }
@@ -148,8 +235,8 @@ pub fn run(code: Vec<String>) {
 
 #[test]
 pub fn test_program() {
-    let code = vec![ "1", "2", "+" ];
-    let mut machine = Machine::new(&code);
+    let code = vec![ "1".to_owned(), "2".to_owned(), "+".to_owned() ];
+    let mut machine = Machine::new(code);
     machine.run();
     assert_eq!(StackValue::Num(3), machine.stack[0]);
 }
