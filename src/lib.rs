@@ -99,21 +99,6 @@ impl std::fmt::Display for StackValue {
     }
 }
 
-/// ```
-/// use simple_vm::{StackValue, StackOperation};
-/// use std::str::FromStr;
-///
-/// // can parse numbers
-/// let value = StackValue::from_str("1").unwrap();
-///
-/// // can parse strings (must be quoted)
-/// let s = StackValue::from_str("\"hi\"").unwrap();
-/// assert_eq!(StackValue::String("hi".to_owned()), s);
-///
-/// // can parse operations
-/// let op = StackValue::from_str("+").unwrap();
-/// assert_eq!(StackValue::Operation(StackOperation::Plus), op);
-/// ```
 impl FromStr for StackValue {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
