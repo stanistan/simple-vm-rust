@@ -36,9 +36,6 @@ macro_rules! stack_operations {
         $($t:ident $s:tt ($($type:pat),*) $e:expr),+
     ) => {
 
-        // generate the enum,
-        // these have no contained data,
-        // so this is super simple!
         #[derive(PartialEq, Debug)]
         pub enum StackOperation {
             $( $t, )+
