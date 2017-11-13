@@ -91,60 +91,11 @@ macro_rules! stack_operations {
     }
 }
 
-
 stack_operations! {
     Plus + (Num(a), Num(b)) Push(Num(a + b)),
     Minus - (Num(a), Num(b)) Push(Num(b - a)),
     Prinln println (a @ _) SideEffect(println!("{}", a))
 }
-
-impl StackOperation {
-    /*
-    pub fn dispatch(&self, stack: &mut Vec<StackValue>) {
-        use StackOperation::*;
-        use StackValue::*;
-        match *self {
-            Plus => {
-                let num_1 = stack.pop().unwrap();
-                let num_2 = stack.pop().unwrap();
-                match (num_1, num_2) {
-                    (Num(a), Num(b)) => stack.push(Num(a + b)),
-                    _ => panic!("fuck")
-                }
-            },
-            Minus => {
-                let num_1 = stack.pop().unwrap();
-                let num_2 = stack.pop().unwrap();
-                match (num_1, num_2) {
-                    (Num(a), Num(b)) => stack.push(Num(b - a)),
-                    _ => panic!("fuck")
-                }
-            },
-            Print => {
-                print!("{}", stack.pop().unwrap());
-            },
-            Println => {
-                println!("{}", stack.pop().unwrap());
-            }
-        }
-    }
-    */
-}
-
-/*
-impl FromStr for StackOperation {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        use StackOperation::*;
-        match s {
-            "+" => Ok(Plus),
-            "-" => Ok(Minus),
-            "print" => Ok(Print),
-            "println" => Ok(Println),
-            _ => Err(())
-        }
-    }
-}*/
 
 /// A value that can live on the stack.
 #[derive(PartialEq, Debug)]
