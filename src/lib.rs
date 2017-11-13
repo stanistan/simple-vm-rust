@@ -41,7 +41,7 @@ macro_rules! stack_operations {
     };
 
     (
-        $($t:ident $s:tt ($($type:pat),*) $e:expr,)+
+        $($t:ident $s:tt ($($type:pat)*) $e:expr,)+
     ) => {
 
         #[derive(Clone, PartialEq, Debug)]
@@ -67,7 +67,7 @@ macro_rules! stack_operations {
                 use StackOperationResult::*;
                 match *self {
                     $(StackOperation::$t => {
-                        stack_operations! { match machine, $e, $($type),*  }
+                        stack_operations! { match machine, $e, $($type),* }
                     },)+
                 }
             }
@@ -76,10 +76,10 @@ macro_rules! stack_operations {
 }
 
 stack_operations! {
-    Plus + (Num(a), Num(b)) Push(Num(a + b)),
-    Minus - (Num(a), Num(b)) Push(Num(a - b)),
-    Multiply * (Num(a), Num(b)) Push(Num(a * b)),
-    Divide / (Num(a), Num(b)) Push(Num(a / b)),
+    Plus + (Num(a) Num(b)) Push(Num(a + b)),
+    Minus - (Num(a) Num(b)) Push(Num(a - b)),
+    Multiply * (Num(a) Num(b)) Push(Num(a * b)),
+    Divide / (Num(a) Num(b)) Push(Num(a / b)),
     ToInt cast_int (String(a)) Push(Num(a.parse::<isize>().unwrap_or(0))),
     ToStr cast_str (a @ _) Push(String(format!("{}", a))),
     Println println (a @ _) SideEffect(println!("{}", a)),
@@ -87,6 +87,13 @@ stack_operations! {
     Dup dup (any @ _) Append(vec![any.clone(), any]),
     SleepMS sleep_ms (Num(a)) SideEffect(std::thread::sleep(std::time::Duration::from_millis(a as u64))),
     Halt halt (Num(exit_code)) SideEffect(std::process::exit(exit_code as i32)),
+    Read read (any @ _) Append(vec![any,{
+        // this is kind of a hack around the macro :(
+        // this will super fail if read is the first instruction
+        let mut input = std::string::String::new();
+        std::io::stdin().read_line(&mut input).unwrap();
+        String(input.trim().to_owned())
+    }]),
 }
 
 /// A value that can live on the stack.
