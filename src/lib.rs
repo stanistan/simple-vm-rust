@@ -99,7 +99,7 @@ macro_rules! stack_operations {
     //
     // The trailing comma is required.
     (
-        $($(#[$attr:meta])* $t:ident $s:tt ($($type:pat)*) $e:expr,)+
+        $($(#[$attr:meta])* $t:ident $s:tt ($($type:pat),*) $e:expr,)+
     ) => {
 
         #[derive(Clone, PartialEq, Debug)]
@@ -134,18 +134,32 @@ macro_rules! stack_operations {
 }
 
 stack_operations! {
-    Plus + (Num(a) Num(b)) Push(Num(a + b)),
-    Minus - (Num(a) Num(b)) Push(Num(a - b)),
-    Multiply * (Num(a) Num(b)) Push(Num(a * b)),
-    Divide / (Num(a) Num(b)) Push(Num(a / b)),
-    ToInt cast_int (String(a)) Push(Num(a.parse::<isize>().unwrap_or(0))),
-    ToStr cast_str (a @ _) Push(String(format!("{}", a))),
-    Println println (a @ _) SideEffect(println!("{}", a)),
-    Jump jmp (Num(a)) Jump(a as usize),
-    Dup dup (any @ _) Append(vec![any.clone(), any]),
-    SleepMS sleep_ms (Num(a)) SideEffect(sleep_ms(a as u64)),
-    Halt halt (Num(exit_code)) SideEffect(exit(exit_code as i32)),
-    Read read () Push(String(read_line())),
+    Plus + (Num(a), Num(b))
+        Push(Num(a + b)),
+    Minus - (Num(a), Num(b))
+        Push(Num(a - b)),
+    Multiply * (Num(a), Num(b))
+        Push(Num(a * b)),
+    Divide / (Num(a), Num(b))
+        Push(Num(a / b)),
+    ToInt cast_int (String(a))
+        Push(Num(a.parse::<isize>().unwrap_or(0))),
+    ToStr cast_str (a @ _)
+        Push(String(format!("{}", a))),
+    Println println (a @ _)
+        SideEffect(println!("{}", a)),
+    IF if (false_val @ _, true_val @ _, Num(test_val))
+        Push(if test_val == 0 { false_val } else { true_val }),
+    Jump jmp (Num(a))
+        Jump(a as usize),
+    Dup dup (any @ _)
+        Append(vec![any.clone(), any]),
+    SleepMS sleep_ms (Num(a))
+        SideEffect(sleep_ms(a as u64)),
+    Halt halt (Num(exit_code))
+        SideEffect(exit(exit_code as i32)),
+    Read read ()
+        Push(String(read_line())),
 }
 
 fn exit(exit_code: i32) {
