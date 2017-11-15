@@ -16,14 +16,35 @@ enum StackOperationResult {
 
 macro_rules! stack_operations {
 
+    // Error condition fo when we try to pop a value
+    // off of the stack and there's nothing there.
+    //
+    // This means we can't evaluate the expression.
+    //
+    // TODO, this should return an Err(...)
     (ERR empty_stack $t:pat, $e:expr) => {
         panic!("No value to pop off the stack: {} in {}", stringify!($t), stringify!($e))
     };
 
+    // Error condition when the pattern provided for the value
+    // that's _on_ the stack does not match any of the types.
+    //
+    // This means we can't evaluate the expression.
+    //
+    // TODO, this should return an Err(...)
     (ERR mismach $t:pat) => {
         panic!("Invalid argument type on the stack: {}", stringify!($t))
     };
 
+    // The MATCH variants of this macro are so that we can recursively
+    // generate code to pattern match on the arguments in the main
+    // macro entrypoint...
+    //
+    // This is the LEAF recursive match pattern for when we have gone through
+    // every single one of the potential variants and everything has succeeded.
+    //
+    // The expression is evaluated and given the result type,
+    // we do something with the stack.
     (MATCH $machine:ident, $e:expr,) => {
         match $e {
             Append(mut values) => $machine.stack.append(&mut values),
@@ -33,6 +54,14 @@ macro_rules! stack_operations {
         }
     };
 
+    // The MATCH variants of this macro are so that we can recursively
+    // generate code to pattern match on the arguments in the main
+    // macro entrypoint...
+    //
+    // This is the penultimate when we are down to the last argument,
+    // and need to pop one last value off of the stack.
+    //
+    // NOTE that the trailing comma in the Some branch is super important.
     (MATCH $machine:ident, $e:expr, $t:pat) => {
         match $machine.stack.pop() {
             Some($t) => stack_operations!(MATCH $machine, $e,),
@@ -41,6 +70,13 @@ macro_rules! stack_operations {
         }
     };
 
+    // The MATCH variants of this macro are so that we can recursively
+    // generate code to pattern match on the arguments in the main
+    // macro entrypoint...
+    //
+    // This is the main recursion point where we start with a pattern
+    // to pop an argument from the stack and match it, and if it succeeds
+    // continue to recurse with the $rest.
     (MATCH $machine:ident, $e:expr, $t:pat, $($rest:pat),*) => {
         match $machine.stack.pop() {
             Some($t) => stack_operations!(MATCH $machine, $e, $($rest)*),
@@ -49,6 +85,19 @@ macro_rules! stack_operations {
         }
     };
 
+    // This is the MAIN entry point for the macro.
+    //
+    // The form of arguments this macro takes is something like:
+    //
+    // ```
+    //  /// Variant/function documentation (this is optional)
+    //  EnumVariantName
+    //  ident_of_what_the_vm_understands
+    //  (ValueVariantPattern(var))
+    //  StackOperationResultVariant(operateOnVal(var)),
+    // ```
+    //
+    // The trailing comma is required.
     (
         $($(#[$attr:meta])* $t:ident $s:tt ($($type:pat)*) $e:expr,)+
     ) => {
