@@ -15,38 +15,47 @@ enum StackOperationResult {
 }
 
 macro_rules! stack_operations {
-    (match $machine:ident, $e:expr) => {
+
+    (ERR empty_stack $t:pat, $e:expr) => {
+        panic!("No value to pop off the stack: {} in {}", stringify!($t), stringify!($e))
+    };
+
+    (ERR mismach $t:pat) => {
+        panic!("Invalid argument type on the stack: {}", stringify!($t))
+    };
+
+    (MATCH $machine:ident, $e:expr,) => {
         match $e {
             Append(mut values) => $machine.stack.append(&mut values),
             Push(val) => $machine.stack.push(val),
             Jump(address) => $machine.jump(address),
-            _ => { }
+            SideEffect(_) => ()
         }
     };
 
-    (match $machine:ident, $e:expr, $t:pat) => {
+    (MATCH $machine:ident, $e:expr, $t:pat) => {
         match $machine.stack.pop() {
-            Some($t) => stack_operations! { match $machine, $e },
-            None => panic!("No value to pop off the stack: {} in {}", stringify!($t), stringify!($e)),
-            _ => panic!("Invalid argument type: {}", stringify!($t))
+            Some($t) => stack_operations!(MATCH $machine, $e,),
+            None => stack_operations!(ERR empty_stack $t, $e),
+            _ => stack_operations!(ERR mismach $t),
         }
     };
 
-    (match $machine:ident, $e:expr, $t:pat, $($rest:pat),*) => {
+    (MATCH $machine:ident, $e:expr, $t:pat, $($rest:pat),*) => {
         match $machine.stack.pop() {
-            Some($t) => stack_operations! { match $machine, $e, $($rest)* },
-            None => panic!("No value to pop off the stack: {} in {}", stringify!($t), stringify!($e)),
-            _ => panic!("Invalid argument type: {}", stringify!($t))
+            Some($t) => stack_operations!(MATCH $machine, $e, $($rest)*),
+            None => stack_operations!(ERR empty_stack $t, $e),
+            _ => stack_operations!(ERR mismach $t),
         }
     };
 
     (
-        $($t:ident $s:tt ($($type:pat)*) $e:expr,)+
+        $($(#[$attr:meta])* $t:ident $s:tt ($($type:pat)*) $e:expr,)+
     ) => {
 
         #[derive(Clone, PartialEq, Debug)]
         pub enum StackOperation {
-            $( $t, )+
+            $( $(#[$attr])* $t, )+
         }
 
         impl FromStr for StackOperation {
@@ -67,7 +76,7 @@ macro_rules! stack_operations {
                 use StackOperationResult::*;
                 match *self {
                     $(StackOperation::$t => {
-                        stack_operations! { match machine, $e, $($type),* }
+                        stack_operations!(MATCH machine, $e, $($type),*)
                     },)+
                 }
             }
@@ -85,15 +94,23 @@ stack_operations! {
     Println println (a @ _) SideEffect(println!("{}", a)),
     Jump jmp (Num(a)) Jump(a as usize),
     Dup dup (any @ _) Append(vec![any.clone(), any]),
-    SleepMS sleep_ms (Num(a)) SideEffect(std::thread::sleep(std::time::Duration::from_millis(a as u64))),
-    Halt halt (Num(exit_code)) SideEffect(std::process::exit(exit_code as i32)),
-    Read read (any @ _) Append(vec![any,{
-        // this is kind of a hack around the macro :(
-        // this will super fail if read is the first instruction
-        let mut input = std::string::String::new();
-        std::io::stdin().read_line(&mut input).unwrap();
-        String(input.trim().to_owned())
-    }]),
+    SleepMS sleep_ms (Num(a)) SideEffect(sleep_ms(a as u64)),
+    Halt halt (Num(exit_code)) SideEffect(exit(exit_code as i32)),
+    Read read () Push(String(read_line())),
+}
+
+fn exit(exit_code: i32) {
+    std::process::exit(exit_code)
+}
+
+fn sleep_ms(duration: u64) {
+    std::thread::sleep(std::time::Duration::from_millis(duration))
+}
+
+fn read_line() -> String {
+    let mut input = std::string::String::new();
+    std::io::stdin().read_line(&mut input).unwrap();
+    input.trim().to_owned()
 }
 
 /// A value that can live on the stack.
