@@ -229,14 +229,15 @@ impl std::fmt::Display for StackValue {
 impl FromStr for StackValue {
     type Err = StackError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use StackValue::*;
         let len = s.len();
         if let Ok(n) = s.parse::<isize>() {
-            return Ok(StackValue::Num(n));
+            return Ok(Num(n));
         } else if let Ok(op) = StackOperation::from_str(s) {
-            return Ok(StackValue::Operation(op));
+            return Ok(Operation(op));
         } if len > 1 && s.starts_with('"') && s.ends_with('"') {
             let substr = unsafe { s.get_unchecked(1..(len-1)) };
-            return Ok(StackValue::String(substr.to_owned()));
+            return Ok(String(substr.to_owned()));
         } else {
             return Err(StackError::InvalidString { string: s.to_owned() });
         }
@@ -331,6 +332,5 @@ mod test {
         test_over Num(4), [ "2" "4" "over" "/" "+" ],
         #[should_panic(expected = "EmptyStack")] test_pop Num(0), ["cast_str"],
     }
-
 
 }
