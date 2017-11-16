@@ -79,7 +79,7 @@ macro_rules! stack_operations {
     // continue to recurse with the $rest.
     (MATCH $machine:ident, $e:expr, $t:pat, $($rest:pat),*) => {
         match $machine.stack.pop() {
-            Some($t) => stack_operations!(MATCH $machine, $e, $($rest)*),
+            Some($t) => stack_operations!(MATCH $machine, $e, $($rest),*),
             None => stack_operations!(ERR empty_stack $t, $e),
             _ => stack_operations!(ERR mismach $t),
         }
@@ -134,32 +134,21 @@ macro_rules! stack_operations {
 }
 
 stack_operations! {
-    Plus + (Num(a), Num(b))
-        Push(Num(a + b)),
-    Minus - (Num(a), Num(b))
-        Push(Num(a - b)),
-    Multiply * (Num(a), Num(b))
-        Push(Num(a * b)),
-    Divide / (Num(a), Num(b))
-        Push(Num(a / b)),
-    ToInt cast_int (String(a))
-        Push(Num(a.parse::<isize>().unwrap_or(0))),
-    ToStr cast_str (a @ _)
-        Push(String(format!("{}", a))),
-    Println println (a @ _)
-        SideEffect(println!("{}", a)),
-    IF if (false_val @ _, true_val @ _, Num(test_val))
-        Push(if test_val == 0 { false_val } else { true_val }),
-    Jump jmp (Num(a))
-        Jump(a as usize),
-    Dup dup (any @ _)
-        Append(vec![any.clone(), any]),
-    SleepMS sleep_ms (Num(a))
-        SideEffect(sleep_ms(a as u64)),
-    Halt halt (Num(exit_code))
-        SideEffect(exit(exit_code as i32)),
-    Read read ()
-        Push(String(read_line())),
+    Plus + (Num(a), Num(b)) Push(Num(a + b)),
+    Minus - (Num(a), Num(b)) Push(Num(a - b)),
+    Multiply * (Num(a), Num(b)) Push(Num(a * b)),
+    Divide / (Num(a), Num(b)) Push(Num(b / a)),
+    ToInt cast_int (String(a)) Push(Num(a.parse::<isize>().unwrap_or(0))),
+    ToStr cast_str (a) Push(String(format!("{}", a))),
+    Println println (a) SideEffect(println!("{}", a)),
+    Equals eq (a, b) Push(Num(if a == b { 1 } else { 0 })),
+    Mod % (Num(a), Num(b)) Push(Num(b % a)),
+    If if (f, t, Num(cond)) Push(if cond == 0 { f } else { t }),
+    Jump jmp (Num(a)) Jump(a as usize),
+    Dup dup (any) Append(vec![any.clone(), any]),
+    SleepMS sleep_ms (Num(a)) SideEffect(sleep_ms(a as u64)),
+    Halt halt (Num(exit_code)) SideEffect(exit(exit_code as i32)),
+    Read read () Push(String(read_line())),
 }
 
 fn exit(exit_code: i32) {
@@ -282,6 +271,10 @@ mod test {
         test_cast_to_str String("1".to_owned()), [ "1" "cast_str" ],
         test_cast_to_backwards Num(1), [ "1" "cast_str" "cast_int" ],
         test_dup Num(4), [ "1" "dup" "+" "dup" "+"],
+        test_if_true Num(5), [ "1" "5" "10" "if" ],
+        test_if_false Num(10), [ "0" "5" "10" "if"  ],
+        test_mod Num(0), [ "4" "2" "%" ],
+        test_dif Num(2), [ "4" "2" "/" ],
     }
 
 }
