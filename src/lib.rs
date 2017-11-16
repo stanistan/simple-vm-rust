@@ -29,22 +29,31 @@ impl StackOperationResult {
     }
 }
 
+#[derive(Debug)]
+pub enum StackError {
+    /// Error condition for when we try to pop a value off
+    /// the stack and it's empty for the given expression.
+    EmptyStack {
+        arg_pattern: String,
+        expr: String
+    },
+    /// Error condition for when the pattern provided for the
+    /// value we've popped off the stack does not match the
+    /// argument pattern provided for the expression.
+    PatternMismatch {
+        arg_pattern: String,
+        expr: String
+    },
+}
+
 macro_rules! stack_operations {
 
-    // Error condition fo when we try to pop a value
-    // off of the stack and there's nothing there.
-    //
     // This means we can't evaluate the expression.
-    (ERR empty_stack $t:pat, $e:expr) => {
-        Err(format!("No value to pop off the stack: {} in {}", stringify!($t), stringify!($e)))
-    };
-
-    // Error condition when the pattern provided for the value
-    // that's _on_ the stack does not match any of the types.
-    //
-    // This means we can't evaluate the expression.
-    (ERR mismach $t:pat) => {
-        Err(format!("Invalid argument type on the stack: {}", stringify!($t)))
+    (ERR $error_type:ident $t:pat, $e:expr) => {
+        Err(StackError::$error_type {
+            arg_pattern: stringify!($t).to_owned(),
+            expr: stringify!($e).to_owned(),
+        })
     };
 
     // The MATCH variants of this macro are so that we can recursively
@@ -71,8 +80,8 @@ macro_rules! stack_operations {
     (MATCH $machine:ident, $e:expr, $t:pat) => {
         match $machine.stack.pop() {
             Some($t) => stack_operations!(MATCH $machine, $e,),
-            None => stack_operations!(ERR empty_stack $t, $e),
-            _ => stack_operations!(ERR mismach $t),
+            None => stack_operations!(ERR EmptyStack $t, $e),
+            _ => stack_operations!(ERR PatternMismatch $t, $e),
         }
     };
 
@@ -86,8 +95,8 @@ macro_rules! stack_operations {
     (MATCH $machine:ident, $e:expr, $t:pat, $($rest:pat),*) => {
         match $machine.stack.pop() {
             Some($t) => stack_operations!(MATCH $machine, $e, $($rest),*),
-            None => stack_operations!(ERR empty_stack $t, $e),
-            _ => stack_operations!(ERR mismach $t),
+            None => stack_operations!(ERR EmptyStack $t, $e),
+            _ => stack_operations!(ERR PatternMismatch $t, $e),
         }
     };
 
@@ -126,7 +135,7 @@ macro_rules! stack_operations {
 
         impl StackOperation {
             #[allow(unreachable_patterns, unreachable_code)]
-            pub fn dispatch(&self, machine: &mut Machine) -> Result<bool,String> {
+            pub fn dispatch(&self, machine: &mut Machine) -> Result<bool,StackError> {
                 use StackValue::*;
                 use StackOperationResult::*;
                 match *self {
@@ -230,7 +239,7 @@ impl Machine {
         self.instruction_ptr = address;
     }
 
-    pub fn run(&mut self) -> Result<(), String> {
+    pub fn run(&mut self) -> Result<(), StackError> {
         while self.instruction_ptr < self.code.len() {
 
             let value = {
@@ -254,7 +263,7 @@ impl Machine {
 
 }
 
-pub fn run(code: Vec<String>) -> Result<(), String> {
+pub fn run(code: Vec<String>) -> Result<(), StackError> {
     let mut machine = Machine::new(code);
     machine.run()
 }
@@ -295,7 +304,7 @@ mod test {
         test_dif Num(2), [ "4" "2" "/" ],
         test_stop Num(0), [ "0" "stop" "1" "+" ],
         test_over Num(4), [ "2" "4" "over" "/" "+" ],
-        #[should_panic(expected = "No value to pop")] test_pop Num(0), ["cast_str"],
+        #[should_panic(expected = "EmptyStack")] test_pop Num(0), ["cast_str"],
     }
 
 
