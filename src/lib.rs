@@ -146,7 +146,7 @@ macro_rules! stack_operations {
 
 stack_operations! {
     Plus + (Num(a), Num(b)) Push(Num(a + b)),
-    Minus - (Num(a), Num(b)) Push(Num(a - b)),
+    Minus - (Num(a), Num(b)) Push(Num(b - a)),
     Multiply * (Num(a), Num(b)) Push(Num(a * b)),
     Divide / (Num(a), Num(b)) Push(Num(b / a)),
     ToInt cast_int (String(a)) Push(Num(a.parse::<isize>().unwrap_or(0))),
@@ -161,6 +161,7 @@ stack_operations! {
     Exit exit (Num(exit_code)) SideEffect(exit(exit_code as i32)),
     Stop stop () Stop,
     Read read () Push(String(read_line())),
+    Over over (a, b) Append(vec![b.clone(), a, b]),
 }
 
 fn exit(exit_code: i32) {
@@ -294,6 +295,8 @@ mod test {
         test_mod Num(0), [ "4" "2" "%" ],
         test_dif Num(2), [ "4" "2" "/" ],
         test_stop Num(0), [ "0" "stop" "1" "+" ],
+        test_over Num(4), [ "2" "4" "over" "/" "+" ],
     }
+
 
 }
