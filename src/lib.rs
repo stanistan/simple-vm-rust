@@ -44,6 +44,10 @@ pub enum StackError {
         arg_pattern: String,
         expr: String
     },
+    /// Error condition when we could not parse the string
+    InvalidString {
+        string: String
+    },
 }
 
 macro_rules! stack_operations {
@@ -202,7 +206,7 @@ impl std::fmt::Display for StackValue {
 }
 
 impl FromStr for StackValue {
-    type Err = ();
+    type Err = StackError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let len = s.len();
         if let Ok(n) = s.parse::<isize>() {
@@ -213,7 +217,7 @@ impl FromStr for StackValue {
             let substr = unsafe { s.get_unchecked(1..(len-1)) };
             return Ok(StackValue::String(substr.to_owned()));
         } else {
-            return Err(());
+            return Err(StackError::InvalidString { string: s.to_owned() });
         }
     }
 }
