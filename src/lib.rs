@@ -35,20 +35,16 @@ macro_rules! stack_operations {
     // off of the stack and there's nothing there.
     //
     // This means we can't evaluate the expression.
-    //
-    // TODO, this should return an Err(...)
     (ERR empty_stack $t:pat, $e:expr) => {
-        panic!("No value to pop off the stack: {} in {}", stringify!($t), stringify!($e))
+        Err(format!("No value to pop off the stack: {} in {}", stringify!($t), stringify!($e)))
     };
 
     // Error condition when the pattern provided for the value
     // that's _on_ the stack does not match any of the types.
     //
     // This means we can't evaluate the expression.
-    //
-    // TODO, this should return an Err(...)
     (ERR mismach $t:pat) => {
-        panic!("Invalid argument type on the stack: {}", stringify!($t))
+        Err(format!("Invalid argument type on the stack: {}", stringify!($t)))
     };
 
     // The MATCH variants of this macro are so that we can recursively
@@ -61,7 +57,7 @@ macro_rules! stack_operations {
     // The expression is evaluated and given the result type,
     // we do something with the stack.
     (MATCH $machine:ident, $e:expr,) => {
-        $e.dispatch($machine)
+        Ok($e.dispatch($machine))
     };
 
     // The MATCH variants of this macro are so that we can recursively
@@ -130,7 +126,7 @@ macro_rules! stack_operations {
 
         impl StackOperation {
             #[allow(unreachable_patterns, unreachable_code)]
-            pub fn dispatch(&self, machine: &mut Machine) -> bool {
+            pub fn dispatch(&self, machine: &mut Machine) -> Result<bool,String> {
                 use StackValue::*;
                 use StackOperationResult::*;
                 match *self {
@@ -234,7 +230,7 @@ impl Machine {
         self.instruction_ptr = address;
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> Result<(), String> {
         while self.instruction_ptr < self.code.len() {
 
             let value = {
@@ -245,20 +241,22 @@ impl Machine {
             self.instruction_ptr = self.instruction_ptr + 1;
 
             if let StackValue::Operation(op) = value {
-                if !op.dispatch(self) {
+                if !op.dispatch(self)? {
                     break;
                 }
             } else {
                 self.stack.push(value)
             }
         }
+
+        Ok(())
     }
 
 }
 
-pub fn run(code: Vec<String>) {
+pub fn run(code: Vec<String>) -> Result<(), String> {
     let mut machine = Machine::new(code);
-    machine.run();
+    machine.run()
 }
 
 #[cfg(test)]
@@ -267,15 +265,17 @@ mod test {
     use Machine;
 
     macro_rules! test_run {
-        ($($name:ident $v:expr, [ $($code:expr)+ ],)+) => {
+        ($( $(#[$attr:meta])* $name:ident $v:expr, [ $($code:expr)* ],)+) => {
             $(
+                #[allow(unused_mut)]
                 #[test]
+                $(#[$attr])*
                 fn $name() {
                     use StackValue::*;
                     let mut code = vec![];
-                    $( code.push($code.to_owned()); )+
+                    $( code.push($code.to_owned()); )*
                     let mut machine = Machine::new(code);
-                    machine.run();
+                    machine.run().unwrap();
                     assert_eq!($v, machine.stack[0]);
                 }
             )+
@@ -295,6 +295,7 @@ mod test {
         test_dif Num(2), [ "4" "2" "/" ],
         test_stop Num(0), [ "0" "stop" "1" "+" ],
         test_over Num(4), [ "2" "4" "over" "/" "+" ],
+        #[should_panic(expected = "No value to pop")] test_pop Num(0), ["cast_str"],
     }
 
 
