@@ -8,10 +8,11 @@
 use std::str::FromStr;
 
 enum StackOperationResult {
-    Jump(usize),
     Append(Vec<StackValue>),
+    Jump(usize),
     Push(StackValue),
     SideEffect(()),
+    Stop,
 }
 
 macro_rules! stack_operations {
@@ -47,10 +48,20 @@ macro_rules! stack_operations {
     // we do something with the stack.
     (MATCH $machine:ident, $e:expr,) => {
         match $e {
-            Append(mut values) => $machine.stack.append(&mut values),
-            Push(val) => $machine.stack.push(val),
-            Jump(address) => $machine.jump(address),
-            SideEffect(_) => ()
+            Append(mut values) => {
+                $machine.stack.append(&mut values);
+                true
+            },
+            Jump(address) => {
+                $machine.jump(address);
+                true
+            },
+            Push(val) => {
+                $machine.stack.push(val);
+                true
+            }
+            SideEffect(_) => true,
+            Stop => false,
         }
     };
 
@@ -120,7 +131,7 @@ macro_rules! stack_operations {
 
         impl StackOperation {
             #[allow(unreachable_patterns, unreachable_code)]
-            pub fn dispatch(&self, machine: &mut Machine) {
+            pub fn dispatch(&self, machine: &mut Machine) -> bool {
                 use StackValue::*;
                 use StackOperationResult::*;
                 match *self {
@@ -147,7 +158,8 @@ stack_operations! {
     Jump jmp (Num(a)) Jump(a as usize),
     Dup dup (any) Append(vec![any.clone(), any]),
     SleepMS sleep_ms (Num(a)) SideEffect(sleep_ms(a as u64)),
-    Halt halt (Num(exit_code)) SideEffect(exit(exit_code as i32)),
+    Exit exit (Num(exit_code)) SideEffect(exit(exit_code as i32)),
+    Stop stop () Stop,
     Read read () Push(String(read_line())),
 }
 
@@ -224,15 +236,21 @@ impl Machine {
 
     pub fn run(&mut self) {
         while self.instruction_ptr < self.code.len() {
-            let op = {
+
+            let value = {
                 let instruction = self.code.get(self.instruction_ptr).unwrap();
                 StackValue::from_str(instruction).unwrap()
             };
+
             self.instruction_ptr = self.instruction_ptr + 1;
-            match op {
-                StackValue::Operation(op) => op.dispatch(self),
-                _ => self.stack.push(op)
-            };
+
+            if let StackValue::Operation(op) = value {
+                if !op.dispatch(self) {
+                    break;
+                }
+            } else {
+                self.stack.push(value)
+            }
         }
     }
 
@@ -275,6 +293,7 @@ mod test {
         test_if_false Num(10), [ "0" "5" "10" "if"  ],
         test_mod Num(0), [ "4" "2" "%" ],
         test_dif Num(2), [ "4" "2" "/" ],
+        test_stop Num(0), [ "0" "stop" "1" "+" ],
     }
 
 }
