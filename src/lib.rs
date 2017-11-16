@@ -15,6 +15,20 @@ enum StackOperationResult {
     Stop,
 }
 
+impl StackOperationResult {
+    fn dispatch(self, machine: &mut Machine) -> bool {
+        use StackOperationResult::*;
+        match self {
+            Append(mut values) => machine.stack.append(&mut values),
+            Jump(address) => machine.jump(address),
+            Push(val) => machine.stack.push(val),
+            SideEffect(_) => (),
+            Stop => return false,
+        }
+        return true;
+    }
+}
+
 macro_rules! stack_operations {
 
     // Error condition fo when we try to pop a value
@@ -47,22 +61,7 @@ macro_rules! stack_operations {
     // The expression is evaluated and given the result type,
     // we do something with the stack.
     (MATCH $machine:ident, $e:expr,) => {
-        match $e {
-            Append(mut values) => {
-                $machine.stack.append(&mut values);
-                true
-            },
-            Jump(address) => {
-                $machine.jump(address);
-                true
-            },
-            Push(val) => {
-                $machine.stack.push(val);
-                true
-            }
-            SideEffect(_) => true,
-            Stop => false,
-        }
+        $e.dispatch($machine)
     };
 
     // The MATCH variants of this macro are so that we can recursively
