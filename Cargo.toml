@@ -6,5 +6,6 @@ authors = ["Stan Rozenraukh <stan@stanistan.com>"]
 [[bin]]
 name = "simple_vm"
 path = "src/bin.rs"
+doc = false
 
 [dependencies]
