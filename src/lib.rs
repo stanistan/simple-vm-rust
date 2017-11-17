@@ -1,9 +1,3 @@
-//! Writing a simple stack based VM in rust based on https://csl.name/post/vm/.
-//!
-//! This won't have its own parser built in, but will operate on tokens...
-//! The goal is to have this be something that actually lives on the stack if possible.
-#![allow(dead_code)]
-
 extern crate failure;
 #[macro_use] extern crate failure_derive;
 
@@ -258,6 +252,10 @@ impl std::fmt::Display for StackValue {
     }
 }
 
+// TODO: Make this understand labels, so a person
+// won't necessarily have to keep track of stuff
+// like that on their own when doing subroutines using
+// `call` and `return`.
 impl FromStr for StackValue {
     type Err = StackError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
