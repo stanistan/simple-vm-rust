@@ -73,7 +73,23 @@ pub enum StackError {
     },
 }
 
+macro_rules! debug {
+    ($string:expr, $($rest:expr),*) => {{
+        #[cfg(feature = "debug")]
+        println!($string, $($rest),*);
+    }}
+}
+
 macro_rules! stack_operations {
+
+    (DEBUG $machine:ident $log:expr, $e:expr, $t:ty) => {{
+        debug!("----------",);
+        debug!("before:\t{:?}\t{:?}", $machine.stack, $machine.return_stack);
+        debug!("op:\t{}", stringify!($log));
+        let re: $t = $e;
+        debug!("after:\t{:?}\t{:?}", $machine.stack, $machine.return_stack);
+        re
+    }};
 
     // This means we can't evaluate the expression.
     (ERR $error_type:ident $t:pat, $e:expr) => {
@@ -93,13 +109,15 @@ macro_rules! stack_operations {
     // The expression is evaluated and given the result type,
     // we do something with the stack.
     (MATCH $machine:ident, $address:ident, $e:expr,) => {
-        {
-            #[cfg(feature = "debug")] println!("\n\t{}", stringify!($e));
-            #[cfg(feature = "debug")] println!("before:\t{:?}\t{:?}", $machine.stack, $machine.return_stack);
-            let re: Result<bool,StackError> = Ok($e.dispatch($machine, $address));
-            #[cfg(feature = "debug")] println!("after:\t{:?}\t{:?}", $machine.stack, $machine.return_stack);
-            re
-        }
+        stack_operations!(
+            DEBUG $machine $e,
+            Ok($e.dispatch($machine, $address)),
+            Result<bool, StackError>
+        )
+    };
+
+    (POP $machine:ident) => {
+        stack_operations!(DEBUG $machine Pop, $machine.stack.pop(), Option<StackValue>)
     };
 
     // The MATCH variants of this macro are so that we can recursively
@@ -111,7 +129,7 @@ macro_rules! stack_operations {
     //
     // NOTE that the trailing comma in the Some branch is super important.
     (MATCH $machine:ident, $address: ident, $e:expr, $t:pat) => {
-        match $machine.stack.pop() {
+        match stack_operations!(POP $machine) {
             Some($t) => stack_operations!(MATCH $machine, $address, $e,),
             None => stack_operations!(ERR EmptyStack $t, $e),
             _ => stack_operations!(ERR PatternMismatch $t, $e),
@@ -126,7 +144,7 @@ macro_rules! stack_operations {
     // to pop an argument from the stack and match it, and if it succeeds
     // continue to recurse with the $rest.
     (MATCH $machine:ident, $address:ident, $e:expr, $t:pat, $($rest:pat),*) => {
-        match $machine.stack.pop() {
+        match stack_operations!(POP $machine) {
             Some($t) => stack_operations!(MATCH $machine, $address, $e, $($rest),*),
             None => stack_operations!(ERR EmptyStack $t, $e),
             _ => stack_operations!(ERR PatternMismatch $t, $e),
