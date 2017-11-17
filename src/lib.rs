@@ -9,19 +9,37 @@ use std::str::FromStr;
 
 enum StackOperationResult {
     Append(Vec<StackValue>),
+    Call(usize),
     Jump(usize),
     Push(StackValue),
+    Return,
     SideEffect(()),
     Stop,
 }
 
 impl StackOperationResult {
-    fn dispatch(self, machine: &mut Machine) -> bool {
+    /// Dispatch the result given the stack machine and
+    /// current instruction address.
+    ///
+    /// This consumes the `StackOperationResult` and returns
+    /// true or false, telling the machine run loop to continue
+    /// or stop.
+    ///
+    /// Maybe this is something that should live on the machine struct?
+    fn dispatch(self, machine: &mut Machine, address: usize) -> bool {
         use StackOperationResult::*;
         match self {
             Append(mut values) => machine.stack.append(&mut values),
-            Jump(address) => machine.jump(address),
+            Call(to) => {
+                machine.return_stack.push(address);
+                machine.jump(to);
+            },
+            Jump(to) => machine.jump(to),
             Push(val) => machine.stack.push(val),
+            Return => {
+                let jump_to = machine.return_stack.pop().unwrap();
+                machine.jump(jump_to);
+            },
             SideEffect(_) => (),
             Stop => return false,
         }
@@ -74,8 +92,8 @@ macro_rules! stack_operations {
     //
     // The expression is evaluated and given the result type,
     // we do something with the stack.
-    (MATCH $machine:ident, $e:expr,) => {
-        Ok($e.dispatch($machine))
+    (MATCH $machine:ident, $address:ident, $e:expr,) => {
+        Ok($e.dispatch($machine, $address))
     };
 
     // The MATCH variants of this macro are so that we can recursively
@@ -86,9 +104,9 @@ macro_rules! stack_operations {
     // and need to pop one last value off of the stack.
     //
     // NOTE that the trailing comma in the Some branch is super important.
-    (MATCH $machine:ident, $e:expr, $t:pat) => {
+    (MATCH $machine:ident, $address: ident, $e:expr, $t:pat) => {
         match $machine.stack.pop() {
-            Some($t) => stack_operations!(MATCH $machine, $e,),
+            Some($t) => stack_operations!(MATCH $machine, $address, $e,),
             None => stack_operations!(ERR EmptyStack $t, $e),
             _ => stack_operations!(ERR PatternMismatch $t, $e),
         }
@@ -101,9 +119,9 @@ macro_rules! stack_operations {
     // This is the main recursion point where we start with a pattern
     // to pop an argument from the stack and match it, and if it succeeds
     // continue to recurse with the $rest.
-    (MATCH $machine:ident, $e:expr, $t:pat, $($rest:pat),*) => {
+    (MATCH $machine:ident, $address:ident, $e:expr, $t:pat, $($rest:pat),*) => {
         match $machine.stack.pop() {
-            Some($t) => stack_operations!(MATCH $machine, $e, $($rest),*),
+            Some($t) => stack_operations!(MATCH $machine, $address, $e, $($rest),*),
             None => stack_operations!(ERR EmptyStack $t, $e),
             _ => stack_operations!(ERR PatternMismatch $t, $e),
         }
@@ -154,12 +172,12 @@ macro_rules! stack_operations {
 
         impl StackOperation {
             #[allow(unreachable_patterns, unreachable_code)]
-            pub fn dispatch(&self, machine: &mut Machine) -> Result<bool,StackError> {
+            pub fn dispatch(&self, machine: &mut Machine, address: usize) -> Result<bool,StackError> {
                 use StackValue::*;
                 use StackOperationResult::*;
                 match *self {
                     $(StackOperation::$t => {
-                        stack_operations!(MATCH machine, $e, $($type),*)
+                        stack_operations!(MATCH machine, address, $e, $($type),*)
                     },)+
                 }
             }
@@ -185,6 +203,8 @@ stack_operations! {
     Stop stop () Stop,
     Read read () Push(String(util::read_line())),
     Over over (a, b) Append(vec![b.clone(), a, b]),
+    Call call (Num(a)) Call(a as usize),
+    Return return () Return,
 }
 
 mod util {
@@ -248,6 +268,7 @@ pub type Stack = Vec<StackValue>;
 
 pub struct Machine {
     pub stack: Stack,
+    pub return_stack: Vec<usize>,
     code: Vec<String>,
     instruction_ptr: usize,
 }
@@ -256,6 +277,7 @@ impl Machine {
     pub fn new(code: Vec<String>) -> Self {
         Machine {
             stack: Stack::new(),
+            return_stack: Vec::new(),
             code: code,
             instruction_ptr: 0
         }
@@ -268,15 +290,16 @@ impl Machine {
     pub fn run(&mut self) -> Result<(), StackError> {
         while self.instruction_ptr < self.code.len() {
 
+            let current_instruction = self.instruction_ptr;
             let value = {
-                let instruction = self.code.get(self.instruction_ptr).unwrap();
+                let instruction = self.code.get(current_instruction).unwrap();
                 StackValue::from_str(instruction).unwrap()
             };
 
             self.instruction_ptr = self.instruction_ptr + 1;
 
             if let StackValue::Operation(op) = value {
-                if !op.dispatch(self)? {
+                if !op.dispatch(self, current_instruction)? {
                     break;
                 }
             } else {
@@ -331,6 +354,7 @@ mod test {
         test_stop Num(0), [ "0" "stop" "1" "+" ],
         test_over Num(4), [ "2" "4" "over" "/" "+" ],
         #[should_panic(expected = "EmptyStack")] test_pop Num(0), ["cast_str"],
+        //test_call_return Num(0), [ "1" "1" "4" "call" "+" "return" ],
     }
 
 }
