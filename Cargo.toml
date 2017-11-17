@@ -3,9 +3,15 @@ name = "simple_vm"
 version = "0.1.0"
 authors = ["Stan Rozenraukh <stan@stanistan.com>"]
 
+[features]
+default = []
+debug = []
+
 [[bin]]
 name = "simple_vm"
 path = "src/bin.rs"
 doc = false
 
 [dependencies]
+failure = "0.1.0"
+failure_derive = "0.1.0"

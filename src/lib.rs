@@ -2,8 +2,10 @@
 //!
 //! This won't have its own parser built in, but will operate on tokens...
 //! The goal is to have this be something that actually lives on the stack if possible.
-
 #![allow(dead_code)]
+
+extern crate failure;
+#[macro_use] extern crate failure_derive;
 
 use std::str::FromStr;
 
@@ -31,7 +33,7 @@ impl StackOperationResult {
         match self {
             Append(mut values) => machine.stack.append(&mut values),
             Call(to) => {
-                machine.return_stack.push(address);
+                machine.return_stack.push(address + 1);
                 machine.jump(to);
             },
             Jump(to) => machine.jump(to),
@@ -47,10 +49,11 @@ impl StackOperationResult {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Fail)]
 pub enum StackError {
     /// Error condition for when we try to pop a value off
     /// the stack and it's empty for the given expression.
+    #[fail(display="Cannot pop an empty stack, looking for {} in {}", arg_pattern, expr)]
     EmptyStack {
         arg_pattern: String,
         expr: String
@@ -58,16 +61,19 @@ pub enum StackError {
     /// Error condition for when the pattern provided for the
     /// value we've popped off the stack does not match the
     /// argument pattern provided for the expression.
+    #[fail(display = "Pattern mismatch, looking for {} in {}", arg_pattern, expr)]
     PatternMismatch {
         arg_pattern: String,
         expr: String
     },
     /// Error condition when we could not parse the string.
+    #[fail(display = "Could not parse \"{}\"", string)]
     InvalidString {
         string: String
     },
     /// Error condition for when a given string does not correspond to
     /// any defined operation.
+    #[fail(display = "Invalid operation: {}", name)]
     InvalidOperation {
         name: String
     },
@@ -93,7 +99,13 @@ macro_rules! stack_operations {
     // The expression is evaluated and given the result type,
     // we do something with the stack.
     (MATCH $machine:ident, $address:ident, $e:expr,) => {
-        Ok($e.dispatch($machine, $address))
+        {
+            #[cfg(feature = "debug")] println!("\n\t{}", stringify!($e));
+            #[cfg(feature = "debug")] println!("before:\t{:?}\t{:?}", $machine.stack, $machine.return_stack);
+            let re: Result<bool,StackError> = Ok($e.dispatch($machine, $address));
+            #[cfg(feature = "debug")] println!("after:\t{:?}\t{:?}", $machine.stack, $machine.return_stack);
+            re
+        }
     };
 
     // The MATCH variants of this macro are so that we can recursively
@@ -266,6 +278,7 @@ impl FromStr for StackValue {
 
 pub type Stack = Vec<StackValue>;
 
+#[derive(Debug)]
 pub struct Machine {
     pub stack: Stack,
     pub return_stack: Vec<usize>,
@@ -303,7 +316,7 @@ impl Machine {
                     break;
                 }
             } else {
-                self.stack.push(value)
+                stack_operations!(MATCH self, current_instruction, StackOperationResult::Push(value),)?;
             }
         }
 
@@ -354,7 +367,7 @@ mod test {
         test_stop Num(0), [ "0" "stop" "1" "+" ],
         test_over Num(4), [ "2" "4" "over" "/" "+" ],
         #[should_panic(expected = "EmptyStack")] test_pop Num(0), ["cast_str"],
-        //test_call_return Num(0), [ "1" "1" "4" "call" "+" "return" ],
+        test_call_return Num(4), [ "1" "1" "7" "call" "dup" "+" "stop" "+" "return" ],
     }
 
 }
