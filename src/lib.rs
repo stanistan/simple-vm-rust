@@ -3,44 +3,6 @@ extern crate failure;
 
 use std::str::FromStr;
 
-enum StackOperationResult {
-    Call(usize),
-    Jump(usize),
-    Push(Vec<StackValue>),
-    Return,
-    SideEffect(()),
-    Stop,
-}
-
-impl StackOperationResult {
-    /// Dispatch the result given the stack machine and
-    /// current instruction address.
-    ///
-    /// This consumes the `StackOperationResult` and returns
-    /// true or false, telling the machine run loop to continue
-    /// or stop.
-    ///
-    /// Maybe this is something that should live on the machine struct?
-    fn dispatch(self, machine: &mut Machine, address: usize) -> bool {
-        use StackOperationResult::*;
-        match self {
-            Call(to) => {
-                machine.return_stack.push(address + 1);
-                machine.jump(to);
-            },
-            Jump(to) => machine.jump(to),
-            Push(mut values) => machine.stack.append(&mut values),
-            Return => {
-                let jump_to = machine.return_stack.pop().unwrap();
-                machine.jump(jump_to);
-            },
-            SideEffect(_) => (),
-            Stop => return false,
-        }
-        return true;
-    }
-}
-
 #[derive(Debug, Fail)]
 pub enum StackError {
     /// Error condition for when we try to pop a value off
@@ -69,6 +31,15 @@ pub enum StackError {
     InvalidOperation {
         name: String
     },
+}
+
+enum MachineOperation {
+    Call(usize),
+    Jump(usize),
+    Push(Vec<StackValue>),
+    Return,
+    SideEffect(()),
+    Stop,
 }
 
 macro_rules! debug {
@@ -106,10 +77,10 @@ macro_rules! stack_operations {
     //
     // The expression is evaluated and given the result type,
     // we do something with the stack.
-    (MATCH $machine:ident, $address:ident, $e:expr,) => {
+    (MATCH $machine:ident, $e:expr,) => {
         stack_operations!(
             DEBUG $machine $e,
-            Ok($e.dispatch($machine, $address)),
+            $machine.dispatch($e),
             Result<bool, StackError>
         )
     };
@@ -126,9 +97,9 @@ macro_rules! stack_operations {
     // and need to pop one last value off of the stack.
     //
     // NOTE that the trailing comma in the Some branch is super important.
-    (MATCH $machine:ident, $address: ident, $e:expr, $t:pat) => {
+    (MATCH $machine:ident, $e:expr, $t:pat) => {
         match stack_operations!(POP $machine) {
-            Some($t) => stack_operations!(MATCH $machine, $address, $e,),
+            Some($t) => stack_operations!(MATCH $machine, $e,),
             None => stack_operations!(ERR EmptyStack $t, $e),
             _ => stack_operations!(ERR PatternMismatch $t, $e),
         }
@@ -141,27 +112,15 @@ macro_rules! stack_operations {
     // This is the main recursion point where we start with a pattern
     // to pop an argument from the stack and match it, and if it succeeds
     // continue to recurse with the $rest.
-    (MATCH $machine:ident, $address:ident, $e:expr, $t:pat, $($rest:pat),*) => {
+    (MATCH $machine:ident, $e:expr, $t:pat, $($rest:pat),*) => {
         match stack_operations!(POP $machine) {
-            Some($t) => stack_operations!(MATCH $machine, $address, $e, $($rest),*),
+            Some($t) => stack_operations!(MATCH $machine, $e, $($rest),*),
             None => stack_operations!(ERR EmptyStack $t, $e),
             _ => stack_operations!(ERR PatternMismatch $t, $e),
         }
     };
 
     // This is the MAIN entry point for the macro.
-    //
-    // The form of arguments this macro takes is something like:
-    //
-    // ```
-    //  /// Variant/function documentation (this is optional)
-    //  EnumVariantName
-    //  ident_of_what_the_vm_understands
-    //  (ValueVariantPattern(var))
-    //  StackOperationResultVariant(operateOnVal(var)),
-    // ```
-    //
-    // The trailing comma is required.
     (
         $($(#[$attr:meta])* $t:ident $s:tt ($($type:pat),*) $e:expr,)+
     ) => {
@@ -194,12 +153,12 @@ macro_rules! stack_operations {
 
         impl StackOperation {
             #[allow(unreachable_patterns, unreachable_code)]
-            pub fn dispatch(&self, machine: &mut Machine, address: usize) -> Result<bool,StackError> {
+            pub fn dispatch(&self, machine: &mut Machine) -> Result<bool,StackError> {
                 use StackValue::*;
-                use StackOperationResult::*;
+                use MachineOperation::*;
                 match *self {
                     $(StackOperation::$t => {
-                        stack_operations!(MATCH machine, address, $e, $($type),*)
+                        stack_operations!(MATCH machine, $e, $($type),*)
                     },)+
                 }
             }
@@ -235,8 +194,8 @@ impl Into<Vec<StackValue>> for StackValue {
     }
 }
 
-fn push<T: Into<Vec<StackValue>>>(val: T) -> StackOperationResult {
-    StackOperationResult::Push(val.into())
+fn push<T: Into<Vec<StackValue>>>(val: T) -> MachineOperation {
+    MachineOperation::Push(val.into())
 }
 
 mod util {
@@ -311,6 +270,7 @@ pub struct Machine {
 }
 
 impl Machine {
+    /// Create a new machine for the code.
     pub fn new(code: Vec<String>) -> Self {
         Machine {
             stack: Stack::new(),
@@ -320,10 +280,39 @@ impl Machine {
         }
     }
 
-    pub fn jump(&mut self, address: usize) {
+    /// Move the instruction pointer to a given address.
+    fn jump(&mut self, address: usize) {
+        // TODO check for overflow here
         self.instruction_ptr = address;
     }
 
+    /// Dispatch given the result from the stack operation,
+    /// which gets consumed here.
+    ///
+    /// Returns true or false to indicate whether the `run` loop
+    /// should continue.
+    fn dispatch(&mut self, result: MachineOperation) -> Result<bool,StackError> {
+        use MachineOperation::*;
+        match result {
+            Call(to) => {
+                self.return_stack.push(self.instruction_ptr);
+                self.jump(to);
+            },
+            Jump(to) => self.jump(to),
+            Push(mut values) => self.stack.append(&mut values),
+            Return => match self.return_stack.pop() {
+                Some(jump_to) => self.jump(jump_to),
+                _ => return stack_operations!(ERR EmptyStack Return, return)
+            },
+            SideEffect(_) => (),
+            Stop => return Ok(false),
+        }
+        return Ok(true);
+    }
+
+    /// Runs the machine and either returns an Ok
+    /// with an empty result, or a StackError
+    /// on failure.
     pub fn run(&mut self) -> Result<(), StackError> {
         while self.instruction_ptr < self.code.len() {
 
@@ -336,11 +325,11 @@ impl Machine {
             self.instruction_ptr = self.instruction_ptr + 1;
 
             if let StackValue::Operation(op) = value {
-                if !op.dispatch(self, current_instruction)? {
+                if !op.dispatch(self)? {
                     break;
                 }
             } else {
-                stack_operations!(MATCH self, current_instruction, push(value),)?;
+                stack_operations!(MATCH self, push(value),)?;
             }
         }
 
