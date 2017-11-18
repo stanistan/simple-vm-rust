@@ -4,10 +4,9 @@ extern crate failure;
 use std::str::FromStr;
 
 enum StackOperationResult {
-    Append(Vec<StackValue>),
     Call(usize),
     Jump(usize),
-    Push(StackValue),
+    Push(Vec<StackValue>),
     Return,
     SideEffect(()),
     Stop,
@@ -25,13 +24,12 @@ impl StackOperationResult {
     fn dispatch(self, machine: &mut Machine, address: usize) -> bool {
         use StackOperationResult::*;
         match self {
-            Append(mut values) => machine.stack.append(&mut values),
             Call(to) => {
                 machine.return_stack.push(address + 1);
                 machine.jump(to);
             },
             Jump(to) => machine.jump(to),
-            Push(val) => machine.stack.push(val),
+            Push(mut values) => machine.stack.append(&mut values),
             Return => {
                 let jump_to = machine.return_stack.pop().unwrap();
                 machine.jump(jump_to);
@@ -210,25 +208,35 @@ macro_rules! stack_operations {
 }
 
 stack_operations! {
-    Plus + (Num(a), Num(b)) Push(Num(a + b)),
-    Minus - (Num(a), Num(b)) Push(Num(b - a)),
-    Multiply * (Num(a), Num(b)) Push(Num(a * b)),
-    Divide / (Num(a), Num(b)) Push(Num(b / a)),
-    ToInt cast_int (String(a)) Push(Num(a.parse::<isize>().unwrap_or(0))),
-    ToStr cast_str (a) Push(String(format!("{}", a))),
+    Plus + (Num(a), Num(b)) push(Num(a + b)),
+    Minus - (Num(a), Num(b)) push(Num(b - a)),
+    Multiply * (Num(a), Num(b)) push(Num(a * b)),
+    Divide / (Num(a), Num(b)) push(Num(b / a)),
+    ToInt cast_int (String(a)) push(Num(a.parse::<isize>().unwrap_or(0))),
+    ToStr cast_str (a) push(String(format!("{}", a))),
     Println println (a) SideEffect(println!("{}", a)),
-    Equals eq (a, b) Push(Num(if a == b { 1 } else { 0 })),
-    Mod % (Num(a), Num(b)) Push(Num(b % a)),
-    If if (f, t, Num(cond)) Push(if cond == 0 { f } else { t }),
+    Equals eq (a, b) push(Num(if a == b { 1 } else { 0 })),
+    Mod % (Num(a), Num(b)) push(Num(b % a)),
+    If if (f, t, Num(cond)) push(if cond == 0 { f } else { t }),
     Jump jmp (Num(a)) Jump(a as usize),
-    Dup dup (any) Append(vec![any.clone(), any]),
+    Dup dup (val) push(vec![val.clone(), val]),
     SleepMS sleep_ms (Num(a)) SideEffect(util::sleep_ms(a as u64)),
     Exit exit (Num(exit_code)) SideEffect(util::exit(exit_code as i32)),
     Stop stop () Stop,
-    Read read () Push(String(util::read_line())),
-    Over over (a, b) Append(vec![b.clone(), a, b]),
+    Read read () push(String(util::read_line())),
+    Over over (a, b) push(vec![b.clone(), a, b]),
     Call call (Num(a)) Call(a as usize),
     Return return () Return,
+}
+
+impl Into<Vec<StackValue>> for StackValue {
+    fn into(self) -> Vec<StackValue> {
+        vec![self]
+    }
+}
+
+fn push<T: Into<Vec<StackValue>>>(val: T) -> StackOperationResult {
+    StackOperationResult::Push(val.into())
 }
 
 mod util {
@@ -332,7 +340,7 @@ impl Machine {
                     break;
                 }
             } else {
-                stack_operations!(MATCH self, current_instruction, StackOperationResult::Push(value),)?;
+                stack_operations!(MATCH self, current_instruction, push(value),)?;
             }
         }
 
