@@ -1,8 +1,10 @@
 extern crate simple_vm;
 
+use simple_vm::Machine;
+use std::env;
+
 pub fn main() {
-    use simple_vm::run;
-    use std::env;
     let args: Vec<String> = env::args().skip(1).collect();
-    run(args).unwrap();
+    let mut machine = Machine::new(args);
+    machine.run().unwrap();
 }

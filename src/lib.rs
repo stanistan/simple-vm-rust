@@ -37,6 +37,10 @@ pub enum StackError {
     OutOfBounds,
 }
 
+/// Primitive machine operations.
+///
+/// These are the operations that StackOperation is built on
+/// and what they return to the machine.
 enum MachineOperation {
     Call(usize),
     Jump(usize),
@@ -46,6 +50,8 @@ enum MachineOperation {
     Stop,
 }
 
+/// If compiled with --features=debug, this will print
+/// debugging information to stdout.
 macro_rules! debug {
     ($string:expr, $($rest:expr),*) => {{
         #[cfg(feature = "debug")]
@@ -72,6 +78,10 @@ macro_rules! stack_operations {
         })
     };
 
+    (POP $machine:ident) => {
+        stack_operations!(DEBUG $machine Pop, $machine.stack.pop(), Option<StackValue>)
+    };
+
     // The MATCH variants of this macro are so that we can recursively
     // generate code to pattern match on the arguments in the main
     // macro entrypoint...
@@ -87,10 +97,6 @@ macro_rules! stack_operations {
             $machine.dispatch($e),
             Result<bool, StackError>
         )
-    };
-
-    (POP $machine:ident) => {
-        stack_operations!(DEBUG $machine Pop, $machine.stack.pop(), Option<StackValue>)
     };
 
     // The MATCH variants of this macro are so that we can recursively
@@ -263,12 +269,10 @@ impl FromStr for StackValue {
     }
 }
 
-pub type Stack = Vec<StackValue>;
-
 #[derive(Debug)]
 pub struct Machine {
-    pub stack: Stack,
-    pub return_stack: Vec<usize>,
+    stack: Vec<StackValue>,
+    return_stack: Vec<usize>,
     code: Vec<String>,
     instruction_ptr: usize,
 }
@@ -277,7 +281,7 @@ impl Machine {
     /// Create a new machine for the code.
     pub fn new(code: Vec<String>) -> Self {
         Machine {
-            stack: Stack::new(),
+            stack: Vec::new(),
             return_stack: Vec::new(),
             code: code,
             instruction_ptr: 0
@@ -341,15 +345,8 @@ impl Machine {
 
 }
 
-pub fn run(code: Vec<String>) -> Result<(), StackError> {
-    let mut machine = Machine::new(code);
-    machine.run()
-}
-
 #[cfg(test)]
 mod test {
-
-    use Machine;
 
     macro_rules! test_run {
         ($( $(#[$attr:meta])* $name:ident $v:expr, [ $($code:expr)* ],)+) => {
@@ -359,6 +356,7 @@ mod test {
                 $(#[$attr])*
                 fn $name() {
                     use StackValue::*;
+                    use Machine;
                     let mut code = vec![];
                     $( code.push($code.to_owned()); )*
                     let mut machine = Machine::new(code);
@@ -382,8 +380,8 @@ mod test {
         test_dif Num(2), [ "4" "2" "/" ],
         test_stop Num(0), [ "0" "stop" "1" "+" ],
         test_over Num(4), [ "2" "4" "over" "/" "+" ],
-        #[should_panic(expected = "EmptyStack")] test_pop Num(0), ["cast_str"],
         test_call_return Num(4), [ "1" "1" "7" "call" "dup" "+" "stop" "+" "return" ],
+        #[should_panic(expected = "EmptyStack")] test_pop Num(0), ["cast_str"],
     }
 
 }
