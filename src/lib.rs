@@ -31,6 +31,10 @@ pub enum StackError {
     InvalidOperation {
         name: String
     },
+    /// Error condition when the instruction pointer is out of bounds
+    /// for the code provided to the machine.
+    #[fail(display = "Out of bounds instruction pointer")]
+    OutOfBounds,
 }
 
 enum MachineOperation {
@@ -316,10 +320,9 @@ impl Machine {
     pub fn run(&mut self) -> Result<(), StackError> {
         while self.instruction_ptr < self.code.len() {
 
-            let current_instruction = self.instruction_ptr;
-            let value = {
-                let instruction = self.code.get(current_instruction).unwrap();
-                StackValue::from_str(instruction).unwrap()
+            let value = match self.code.get(self.instruction_ptr) {
+                Some(instruction) => StackValue::from_str(instruction)?,
+                _ => return Err(StackError::OutOfBounds)
             };
 
             self.instruction_ptr = self.instruction_ptr + 1;
