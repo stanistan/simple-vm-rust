@@ -2,6 +2,7 @@ extern crate failure;
 #[macro_use] extern crate failure_derive;
 
 use std::str::FromStr;
+use std::collections::HashMap;
 
 #[derive(Debug, Fail)]
 pub enum StackError {
@@ -232,6 +233,7 @@ mod util {
 #[derive(Clone, PartialEq, Debug)]
 pub enum StackValue {
     Num(isize),
+    Label(String),
     Operation(StackOperation),
     String(String),
 }
@@ -241,6 +243,7 @@ impl std::fmt::Display for StackValue {
         use StackValue::*;
         match *self {
             Num(n) => n.fmt(f),
+            Label(ref n) => write!(f, "{}:", n),
             String(ref s) => s.fmt(f),
             Operation(_) => write!(f, "<code>"),
         }
@@ -263,28 +266,43 @@ impl FromStr for StackValue {
         } if len > 1 && s.starts_with('"') && s.ends_with('"') {
             let substr = unsafe { s.get_unchecked(1..(len-1)) };
             return Ok(String(substr.to_owned()));
+        } else if len > 1 && s.ends_with(':') {
+            let substr = unsafe { s.get_unchecked(0..(len-1)) };
+            return Ok(Label(substr.to_owned()));
         } else {
-            return Err(StackError::InvalidString { string: s.to_owned() });
+            return Err(StackError::InvalidString {
+                string: s.to_owned()
+            });
         }
     }
 }
 
 #[derive(Debug)]
 pub struct Machine {
-    stack: Vec<StackValue>,
-    return_stack: Vec<usize>,
     code: Vec<String>,
     instruction_ptr: usize,
+    return_stack: Vec<usize>,
+    stack: Vec<StackValue>,
+    labels: HashMap<String, usize>,
 }
 
 impl Machine {
     /// Create a new machine for the code.
     pub fn new(code: Vec<String>) -> Self {
+
+        let mut labels = HashMap::new();
+        for (idx, chunk) in code.iter().enumerate() {
+            if let Ok(StackValue::Label(s)) = StackValue::from_str(chunk) {
+                labels.insert(s, idx + 1);
+            }
+        }
+
         Machine {
-            stack: Vec::new(),
-            return_stack: Vec::new(),
             code: code,
-            instruction_ptr: 0
+            instruction_ptr: 0,
+            return_stack: Vec::new(),
+            stack: Vec::new(),
+            labels: labels,
         }
     }
 
@@ -322,22 +340,32 @@ impl Machine {
     /// with an empty result, or a StackError
     /// on failure.
     pub fn run(&mut self) -> Result<(), StackError> {
+        use StackValue::*;
         while self.instruction_ptr < self.code.len() {
 
             let value = match self.code.get(self.instruction_ptr) {
-                Some(instruction) => StackValue::from_str(instruction)?,
-                _ => return Err(StackError::OutOfBounds)
+                None => return Err(StackError::OutOfBounds),
+                Some(instruction) => match StackValue::from_str(instruction) {
+                    Ok(v) => v,
+                    Err(e) => match self.labels.get(instruction) {
+                        Some(n) => Num(*n as isize),
+                        None => return Err(e),
+                    }
+                },
             };
 
             self.instruction_ptr = self.instruction_ptr + 1;
-
-            if let StackValue::Operation(op) = value {
-                if !op.dispatch(self)? {
-                    break;
-                }
-            } else {
-                stack_operations!(MATCH self, push(value),)?;
-            }
+            match value {
+                Label(_) => (),
+                Operation(op) => {
+                    if !op.dispatch(self)? {
+                        break;
+                    }
+                },
+                _ => {
+                    stack_operations!(MATCH self, push(value),)?;
+                },
+            };
         }
 
         Ok(())
@@ -368,6 +396,7 @@ mod test {
     }
 
     test_run! {
+
         test_addition Num(3), [ "1" "2" "+" ],
         test_cast_to_int Num(1), [ "\"1\"" "cast_int" ],
         test_cast_to_int_defaults_to_zero Num(0), [ "\"asdf\"" "cast_int" ],
@@ -381,7 +410,11 @@ mod test {
         test_stop Num(0), [ "0" "stop" "1" "+" ],
         test_over Num(4), [ "2" "4" "over" "/" "+" ],
         test_call_return Num(4), [ "1" "1" "7" "call" "dup" "+" "stop" "+" "return" ],
-        #[should_panic(expected = "EmptyStack")] test_pop Num(0), ["cast_str"],
+        test_label1 Num(0), [  "0" "end" "jmp" "one:" "1" "+" "end:" "0" "+" ],
+        test_label2 Num(1), [  "0" "one" "jmp" "one:" "1" "+" "end:" "0" "+" ],
+
+        #[should_panic(expected = "EmptyStack")]
+        test_pop Num(0), ["cast_str"],
     }
 
 }
