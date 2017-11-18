@@ -236,6 +236,7 @@ pub enum StackValue {
     Label(String),
     Operation(StackOperation),
     String(String),
+    PossibleLabel(String),
 }
 
 impl std::fmt::Display for StackValue {
@@ -244,8 +245,9 @@ impl std::fmt::Display for StackValue {
         match *self {
             Num(n) => n.fmt(f),
             Label(ref n) => write!(f, "{}:", n),
-            String(ref s) => s.fmt(f),
+            String(ref s) => write!(f, "\"{}\"", s),
             Operation(_) => write!(f, "<code>"),
+            PossibleLabel(ref s) => s.fmt(f),
         }
     }
 }
@@ -270,16 +272,14 @@ impl FromStr for StackValue {
             let substr = unsafe { s.get_unchecked(0..(len-1)) };
             return Ok(Label(substr.to_owned()));
         } else {
-            return Err(StackError::InvalidString {
-                string: s.to_owned()
-            });
+            return Ok(PossibleLabel(s.to_owned()));
         }
     }
 }
 
 #[derive(Debug)]
 pub struct Machine {
-    code: Vec<String>,
+    code: Vec<StackValue>,
     instruction_ptr: usize,
     return_stack: Vec<usize>,
     stack: Vec<StackValue>,
@@ -288,12 +288,18 @@ pub struct Machine {
 
 impl Machine {
     /// Create a new machine for the code.
-    pub fn new(code: Vec<String>) -> Self {
+    pub fn new(code_strings: Vec<String>) -> Self {
 
+        // set up the labels here
         let mut labels = HashMap::new();
-        for (idx, chunk) in code.iter().enumerate() {
-            if let Ok(StackValue::Label(s)) = StackValue::from_str(chunk) {
-                labels.insert(s, idx + 1);
+        let mut code = Vec::new();
+
+        for (idx, chunk) in code_strings.iter().enumerate() {
+            if let Ok(value) = StackValue::from_str(chunk) {
+                if let &StackValue::Label(ref s) = &value {
+                    labels.insert(s.clone(), idx + 1);
+                }
+                code.push(value);
             }
         }
 
@@ -312,11 +318,9 @@ impl Machine {
         self.instruction_ptr = address;
     }
 
-    /// Dispatch given the result from the stack operation,
-    /// which gets consumed here.
+    /// Dispatch given the result from the stack operation, which gets consumed here.
     ///
-    /// Returns true or false to indicate whether the `run` loop
-    /// should continue.
+    /// Returns true or false to indicate whether the `run` loop should continue.
     fn dispatch(&mut self, result: MachineOperation) -> Result<bool,StackError> {
         use MachineOperation::*;
         match result {
@@ -336,25 +340,32 @@ impl Machine {
         return Ok(true);
     }
 
-    /// Runs the machine and either returns an Ok
-    /// with an empty result, or a StackError
-    /// on failure.
+    /// Runs the machine and either returns an Ok with an empty result,
+    /// or a StackError on failure.
     pub fn run(&mut self) -> Result<(), StackError> {
         use StackValue::*;
         while self.instruction_ptr < self.code.len() {
 
+            // attempt to construct a StackValue from the current position in code
             let value = match self.code.get(self.instruction_ptr) {
                 None => return Err(StackError::OutOfBounds),
-                Some(instruction) => match StackValue::from_str(instruction) {
-                    Ok(v) => v,
-                    Err(e) => match self.labels.get(instruction) {
-                        Some(n) => Num(*n as isize),
-                        None => return Err(e),
-                    }
-                },
+                Some(instruction) => match instruction {
+                    &PossibleLabel(ref s) => match self.labels.get(s) {
+                        Some(pos) => Num(*pos as isize),
+                        _ => return Err(StackError::InvalidString {
+                            string: s.clone()
+                        })
+                    },
+                    any @ _ => any.clone(),
+                }
             };
 
+            // move forward in instructions
             self.instruction_ptr = self.instruction_ptr + 1;
+
+            // evalate the value, if it's a label we just skip,
+            // if it's an operation, we dispatch it,
+            // otherwise we push the value onto the stack.
             match value {
                 Label(_) => (),
                 Operation(op) => {
