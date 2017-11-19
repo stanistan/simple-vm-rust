@@ -252,10 +252,6 @@ impl std::fmt::Display for StackValue {
     }
 }
 
-// TODO: Make this understand labels, so a person
-// won't necessarily have to keep track of stuff
-// like that on their own when doing subroutines using
-// `call` and `return`.
 impl FromStr for StackValue {
     type Err = StackError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -288,18 +284,14 @@ pub struct Machine {
 
 impl Machine {
     /// Create a new machine for the code.
-    pub fn new(code_strings: Vec<String>) -> Self {
+    pub fn new(code: Vec<StackValue>) -> Self {
 
         // set up the labels here
         let mut labels = HashMap::new();
-        let mut code = Vec::new();
 
-        for (idx, chunk) in code_strings.iter().enumerate() {
-            if let Ok(value) = StackValue::from_str(chunk) {
-                if let &StackValue::Label(ref s) = &value {
-                    labels.insert(s.clone(), idx + 1);
-                }
-                code.push(value);
+        for (idx, value) in code.iter().enumerate() {
+            if let &StackValue::Label(ref s) = value {
+                labels.insert(s.clone(), idx + 1);
             }
         }
 
@@ -310,6 +302,11 @@ impl Machine {
             stack: Vec::new(),
             labels: labels,
         }
+    }
+
+    pub fn new_for_input(input: &str) -> Result<Self,StackError> {
+        let code = tokenize(input)?;
+        Ok(Self::new(code))
     }
 
     /// Move the instruction pointer to a given address.
@@ -384,20 +381,88 @@ impl Machine {
 
 }
 
+/// Given a string it should break this up into
+/// a list of tokens that can be parsed into StackValue.
+fn tokenize(input: &str) -> Result<Vec<StackValue>, StackError> {
+
+    let mut output: Vec<StackValue> = Vec::new();
+    let mut prev_is_escape = false;
+    let mut current_token = String::new();
+
+    for c in input.chars() {
+        match c {
+            '"' => {
+                current_token.push(c);
+                if !prev_is_escape && current_token.len() > 1 {
+                    let value = StackValue::from_str(&current_token)?;
+                    output.push(value);
+                    current_token = String::new();
+                } else {
+                    prev_is_escape = false;
+                }
+            },
+            '\\' => {
+                if prev_is_escape {
+                    prev_is_escape = false;
+                    current_token.push(c);
+                } else {
+                    prev_is_escape = true;
+                }
+            },
+            ' ' | '\n' | '\t' | '\r' => {
+                if !current_token.is_empty() {
+                    if current_token.starts_with('"') {
+                        current_token.push(c);
+                    } else {
+                        let value = StackValue::from_str(&current_token)?;
+                        output.push(value);
+                        current_token = String::new();
+                    }
+                }
+            },
+            _ => {
+                current_token.push(c);
+            },
+        }
+    }
+    if !current_token.is_empty() {
+        let value = StackValue::from_str(&current_token)?;
+        output.push(value);
+    }
+    return Ok(output);
+
+}
+
 #[cfg(test)]
 mod test {
 
+    use StackValue::*;
+    use super::tokenize;
+
+    macro_rules! assert_tokens {
+        ([ $($token:expr),* ], $test:expr) => {{
+            let expected: Vec<super::StackValue> = vec![ $($token),* ];
+            assert_eq!(expected, tokenize($test).unwrap());
+        }}
+    }
+
+    #[test]
+    fn test_tokenize() {
+        assert_tokens!( [ ], "      ");
+        assert_tokens!( [ Num(0) ], "0" );
+        assert_tokens!( [ Num(0), Num(1) ], "0 1" );
+        assert_tokens!( [ String("hi".to_owned()) ], "\"hi\"" );
+    }
+
     macro_rules! test_run {
-        ($( $(#[$attr:meta])* $name:ident $v:expr, [ $($code:expr)* ],)+) => {
+        ($( $(#[$attr:meta])* $name:ident $v:expr, [ $code:expr ],)+) => {
             $(
                 #[allow(unused_mut)]
                 #[test]
                 $(#[$attr])*
                 fn $name() {
-                    use StackValue::*;
                     use Machine;
-                    let mut code = vec![];
-                    $( code.push($code.to_owned()); )*
+                    let code = super::tokenize($code).unwrap();
                     let mut machine = Machine::new(code);
                     machine.run().unwrap();
                     assert_eq!($v, machine.stack[0]);
@@ -408,24 +473,25 @@ mod test {
 
     test_run! {
 
-        test_addition Num(3), [ "1" "2" "+" ],
-        test_cast_to_int Num(1), [ "\"1\"" "cast_int" ],
-        test_cast_to_int_defaults_to_zero Num(0), [ "\"asdf\"" "cast_int" ],
-        test_cast_to_str String("1".to_owned()), [ "1" "cast_str" ],
-        test_cast_to_backwards Num(1), [ "1" "cast_str" "cast_int" ],
-        test_dup Num(4), [ "1" "dup" "+" "dup" "+"],
-        test_if_true Num(5), [ "1" "5" "10" "if" ],
-        test_if_false Num(10), [ "0" "5" "10" "if"  ],
-        test_mod Num(0), [ "4" "2" "%" ],
-        test_dif Num(2), [ "4" "2" "/" ],
-        test_stop Num(0), [ "0" "stop" "1" "+" ],
-        test_over Num(4), [ "2" "4" "over" "/" "+" ],
-        test_call_return Num(4), [ "1" "1" "7" "call" "dup" "+" "stop" "+" "return" ],
-        test_label1 Num(0), [  "0" "end" "jmp" "one:" "1" "+" "end:" "0" "+" ],
-        test_label2 Num(1), [  "0" "one" "jmp" "one:" "1" "+" "end:" "0" "+" ],
+        test_addition Num(3), [ "1 2 +" ],
+        test_cast_to_int Num(1), [ "\"1\" cast_int" ],
+        test_cast_to_int_defaults_to_zero Num(0), [ "\"asdf\" cast_int" ],
+        test_cast_to_str String("1".to_owned()), [ "1 cast_str" ],
+        test_cast_to_backwards Num(1), [ "1 cast_str cast_int" ],
+        test_dup Num(4), [ "1 dup + dup +"],
+        test_if_true Num(5), [ "1 5 10 if" ],
+        test_if_false Num(10), [ "0 5 10 if"  ],
+        test_mod Num(0), [ "4 2 %" ],
+        test_dif Num(2), [ "4 2 /" ],
+        test_stop Num(0), [ "0 stop 1 +" ],
+        test_over Num(4), [ "2 4 over / +" ],
+        test_call_return Num(4), [ "1 1 7 call dup + stop + return" ],
+        test_label1 Num(0), [  "0 end jmp one: 1 + end: 0 +" ],
+        test_label2 Num(1), [  "0 one jmp one: 1 + end: 0 +" ],
 
         #[should_panic(expected = "EmptyStack")]
         test_pop Num(0), ["cast_str"],
     }
+
 
 }
