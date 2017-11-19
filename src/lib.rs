@@ -14,6 +14,28 @@ pub enum StackError {
         arg_pattern: String,
         expr: String
     },
+    /// Error condition for when a given string does not correspond to
+    /// any defined operation.
+    #[fail(display = "Invalid operation: {}", name)]
+    InvalidOperation {
+        name: String
+    },
+    /// Error condition when we could not parse the string.
+    #[fail(display = "Could not parse \"{}\"", string)]
+    InvalidString {
+        string: String
+    },
+    /// Error condition when a label is defined in multiple locations
+    /// in the source.
+    #[fail(display = "Label {} defined in locations: {:?}", label, locations)]
+    MultipleLabelDefinitions {
+        label: String,
+        locations: Vec<usize>,
+    },
+    /// Error condition when the instruction pointer is out of bounds
+    /// for the code provided to the machine.
+    #[fail(display = "Out of bounds instruction pointer")]
+    OutOfBounds,
     /// Error condition for when the pattern provided for the
     /// value we've popped off the stack does not match the
     /// argument pattern provided for the expression.
@@ -22,21 +44,12 @@ pub enum StackError {
         arg_pattern: String,
         expr: String
     },
-    /// Error condition when we could not parse the string.
-    #[fail(display = "Could not parse \"{}\"", string)]
-    InvalidString {
-        string: String
+
+    #[fail(display = "Program referes to undefined \"{}\" {} time(s)", label, times)]
+    UndefinedLabel {
+        label: String,
+        times: usize
     },
-    /// Error condition for when a given string does not correspond to
-    /// any defined operation.
-    #[fail(display = "Invalid operation: {}", name)]
-    InvalidOperation {
-        name: String
-    },
-    /// Error condition when the instruction pointer is out of bounds
-    /// for the code provided to the machine.
-    #[fail(display = "Out of bounds instruction pointer")]
-    OutOfBounds,
 }
 
 /// Primitive machine operations.
@@ -186,13 +199,13 @@ stack_operations! {
     ToInt cast_int (String(a)) push(Num(a.parse::<isize>().unwrap_or(0))),
     ToStr cast_str (a) push(String(format!("{}", a))),
     Println println (a) SideEffect(println!("{}", a)),
-    Equals == (a, b) push(Num(if a == b { 1 } else { 0 })),
-    LessThan < (Num(a), Num(b)) push(Num(if b < a { 1 } else { 0 })),
-    LessThanOrEqualTo <= (Num(a), Num(b)) push(Num(if b <= a { 1 } else { 0 })),
-    GreaterHan > (Num(a), Num(b)) push(Num(if b > a { 1 } else { 0 })),
-    GreaterHanOrEqualto >= (Num(a), Num(b)) push(Num(if b >= a { 1 } else { 0 })),
+    Equals == (a, b) push(Bool(a == b)),
+    LessThan < (Num(a), Num(b)) push(Bool(b < a)),
+    LessThanOrEqualTo <= (Num(a), Num(b)) push(Bool(b <= a)),
+    GreaterHan > (Num(a), Num(b)) push(Bool(b > a)),
+    GreaterHanOrEqualto >= (Num(a), Num(b)) push(Bool(b >= a)),
     Mod % (Num(a), Num(b)) push(Num(b % a)),
-    If if (f, t, Num(cond)) push(if cond == 0 { f } else { t }),
+    If if (f, t, Bool(cond)) push(if cond { t } else { f }),
     Jump jmp (Num(a)) Jump(a as usize),
     Duplicate dup (val) push(vec![val.clone(), val]),
     Drop drop (_) SideEffect(()),
@@ -240,6 +253,7 @@ mod util {
 /// A value that can live on the stack.
 #[derive(Clone, PartialEq, Debug)]
 pub enum StackValue {
+    Bool(bool),
     Num(isize),
     Label(String),
     Operation(StackOperation),
@@ -251,6 +265,7 @@ impl std::fmt::Display for StackValue {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
         use StackValue::*;
         match *self {
+            Bool(b) => b.fmt(f),
             Num(n) => n.fmt(f),
             Label(ref n) => write!(f, "{}:", n),
             String(ref s) => write!(f, "\"{}\"", s),
@@ -265,7 +280,11 @@ impl FromStr for StackValue {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         use StackValue::*;
         let len = s.len();
-        if let Ok(n) = s.parse::<isize>() {
+        if s == "true" {
+            return Ok(StackValue::Bool(true));
+        } else if s == "false" {
+            return Ok(StackValue::Bool(false));
+        } else if let Ok(n) = s.parse::<isize>() {
             return Ok(Num(n));
         } else if let Ok(op) = StackOperation::from_str(s) {
             return Ok(Operation(op));
@@ -292,29 +311,59 @@ pub struct Machine {
 
 impl Machine {
     /// Create a new machine for the code.
-    pub fn new(code: Vec<StackValue>) -> Self {
-
-        // set up the labels here
-        let mut labels = HashMap::new();
+    pub fn new(code: Vec<StackValue>) -> Result<Self, StackError> {
+        // The stack machine itself would know the labels
+        // so we should know _before_ we run the code
+        // whether or not there are malformed instructions.
+        //
+        // It's possible that a label is defined 2x which is a problem,
+        // and it's possible that we have refer to invalid labels
+        // in the program execution.
+        //
+        // The hashmap is keyed on the label name, and the value is tuple of:
+        // 1. Do we have a location in code to point this to? How many?
+        // 2. How many times is this label referenced?
+        let mut labels_meta: HashMap<String, (Vec<usize>, usize)> = HashMap::new();
 
         for (idx, value) in code.iter().enumerate() {
             if let &StackValue::Label(ref s) = value {
-                labels.insert(s.clone(), idx + 1);
+                let entry = labels_meta.entry(s.clone()).or_insert((vec![], 0));
+                entry.0.push(idx + 1);
+            } else if let &StackValue::PossibleLabel(ref s) = value {
+                let entry = labels_meta.entry(s.clone()).or_insert((vec![], 0));
+                entry.1 = entry.1 + 1;
             }
         }
 
-        Machine {
+        let mut labels = HashMap::new();
+        for (key, val) in labels_meta.iter() {
+            if val.0.len() > 1 {
+                return Err(StackError::MultipleLabelDefinitions{
+                    label: key.clone(),
+                    locations: val.0.clone(),
+                });
+            } else if val.0.is_empty() && val.1 > 0 {
+                return Err(StackError::UndefinedLabel {
+                    label: key.clone(),
+                    times: val.1,
+                });
+            } else {
+                labels.insert(key.clone(), val.0[0]);
+            }
+        }
+
+        Ok(Machine {
             code: code,
             instruction_ptr: 0,
             return_stack: Vec::new(),
             stack: Vec::new(),
             labels: labels,
-        }
+        })
     }
 
     pub fn new_for_input(input: &str) -> Result<Self,StackError> {
         let code = tokenize(input)?;
-        Ok(Self::new(code))
+        Self::new(code)
     }
 
     /// Move the instruction pointer to a given address.
@@ -505,7 +554,7 @@ mod tests {
                 fn $name() {
                     use Machine;
                     let code = super::tokenize($code).unwrap();
-                    let mut machine = Machine::new(code);
+                    let mut machine = Machine::new(code).unwrap();
                     machine.run().unwrap();
                     assert_eq!($v, machine.stack[0]);
                 }
@@ -521,8 +570,8 @@ mod tests {
         test_cast_to_str String("1".to_owned()), [ "1 cast_str" ],
         test_cast_to_backwards Num(1), [ "1 cast_str cast_int" ],
         test_dup Num(4), [ "1 dup + dup +"],
-        test_if_true Num(5), [ "1 5 10 if" ],
-        test_if_false Num(10), [ "0 5 10 if"  ],
+        test_if_true Num(5), [ "true 5 10 if" ],
+        test_if_false Num(10), [ "false 5 10 if"  ],
         test_mod Num(0), [ "4 2 %" ],
         test_dif Num(2), [ "4 2 /" ],
         test_stop Num(0), [ "0 stop 1 +" ],
@@ -538,6 +587,12 @@ mod tests {
 
         #[should_panic(expected = "EmptyStack")]
         test_pop Num(0), ["cast_str"],
+
+        #[should_panic(expected = "UndefinedLabel")]
+        test_undefined_label Num(0), [ "asdf" ],
+
+        #[should_panic(expected = "MultipleLabelDefinitions")]
+        test_multiple_label_definitions Num(0), [ "a: a:" ],
     }
 
 }

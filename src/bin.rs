@@ -17,7 +17,6 @@ pub fn main() {
     f.read_to_string(&mut contents).expect("Reading the file failed");
 
     let code = tokenize(&contents).expect("Could not tokenize file contents");
-    let mut machine = Machine::new(code);
-
+    let mut machine = Machine::new(code).expect("Could not create machine.");
     machine.run().expect("Code execution failed");
 }
