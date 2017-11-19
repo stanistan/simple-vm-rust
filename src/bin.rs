@@ -18,5 +18,6 @@ pub fn main() {
 
     let code = tokenize(&contents).expect("Could not tokenize file contents");
     let mut machine = Machine::new(code).expect("Could not create machine.");
-    machine.run().expect("Code execution failed");
+    let stats = machine.run().expect("Code execution failed");
+    println!("{:?}", stats);
 }

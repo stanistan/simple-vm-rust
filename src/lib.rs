@@ -200,6 +200,9 @@ stack_operations! {
     ToStr cast_str (a) push(String(format!("{}", a))),
     Println println (a) SideEffect(println!("{}", a)),
     Equals == (a, b) push(Bool(a == b)),
+    Or or (Bool(a), Bool(b)) push(Bool(a || b)),
+    And and (Bool(a), Bool(b)) push(Bool(a && b)),
+    Not not (Bool(a)) push(Bool(!a)),
     LessThan < (Num(a), Num(b)) push(Bool(b < a)),
     LessThanOrEqualTo <= (Num(a), Num(b)) push(Bool(b <= a)),
     GreaterHan > (Num(a), Num(b)) push(Bool(b > a)),
@@ -301,6 +304,12 @@ impl FromStr for StackValue {
 }
 
 #[derive(Debug)]
+pub struct RunStats {
+    pub num_instructions: usize,
+    pub max_stack_size: usize,
+}
+
+#[derive(Debug)]
 pub struct Machine {
     code: Vec<StackValue>,
     instruction_ptr: usize,
@@ -396,7 +405,14 @@ impl Machine {
 
     /// Runs the machine and either returns an Ok with an empty result,
     /// or a StackError on failure.
-    pub fn run(&mut self) -> Result<(), StackError> {
+    pub fn run(&mut self) -> Result<Option<RunStats>, StackError> {
+
+        #[cfg(feature = "stats")]
+        let mut stats = RunStats {
+            num_instructions: 0,
+            max_stack_size: 0
+        };
+
         use StackValue::*;
         while self.instruction_ptr < self.code.len() {
 
@@ -431,9 +447,22 @@ impl Machine {
                     stack_operations!(MATCH self, push(value),)?;
                 },
             };
+
+            #[cfg(feature = "stats")]
+            {
+                stats.num_instructions = stats.num_instructions + 1;
+                let stack_size = self.stack.len();
+                if stack_size > stats.max_stack_size {
+                    stats.max_stack_size = stack_size;
+                }
+            }
         }
 
-        Ok(())
+        #[cfg(feature = "stats")]
+        return Ok(Some(stats));
+
+        #[cfg(not(feature = "stats"))]
+        return Ok(None);
     }
 
 }
@@ -539,6 +568,7 @@ mod tests {
     #[test]
     fn test_tokenize() {
         assert_tokens!( [ ], "# whatever man");
+        assert_tokens!( [ ], "# \"sup\" println read");
         assert_tokens!( [ ], "      ");
         assert_tokens!( [ Num(0) ], "0" );
         assert_tokens!( [ Num(0), Num(1) ], "0 1" );
@@ -584,6 +614,8 @@ mod tests {
         test_rot1 Num(2), [ "1 2 3 rot" ],
         test_rot2 Num(5), [ "1 2 3 rot drop +" ],
         test_rot3 Num(3), [ "1 2 3 rot rot" ],
+        test_and Bool(true), [ "false not true and" ],
+        test_or Bool(true), [ "false true or" ],
 
         #[should_panic(expected = "EmptyStack")]
         test_pop Num(0), ["cast_str"],

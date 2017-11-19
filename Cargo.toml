@@ -6,6 +6,7 @@ authors = ["Stan Rozenraukh <stan@stanistan.com>"]
 [features]
 default = []
 debug = []
+stats = []
 
 [[bin]]
 name = "simple_vm"

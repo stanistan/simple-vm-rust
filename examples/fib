@@ -1,0 +1,10 @@
+# Going through https://en.wikipedia.org/wiki/Stack-oriented_programming_language
+# where it defines a fibonacci program in a stack based language and
+# porting it...
+#
+# "To what number" println read cast_int
+
+10 fib call println stop
+fib: dup dup 1 == swap 0 == or not inner end if call
+end: return
+inner: dup 1 - fib call swap 2 - fib call + return
