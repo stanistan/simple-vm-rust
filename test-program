@@ -1,0 +1,15 @@
+"Please enter a number:" read_number call
+"Please enter another:" read_number call
++
+dup
+println
+double call
+println
+
+stop
+
+read_number:
+    println read cast_int return
+
+double:
+    dup + return

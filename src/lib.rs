@@ -383,7 +383,7 @@ impl Machine {
 
 /// Given a string it should break this up into
 /// a list of tokens that can be parsed into StackValue.
-fn tokenize(input: &str) -> Result<Vec<StackValue>, StackError> {
+pub fn tokenize(input: &str) -> Result<Vec<StackValue>, StackError> {
 
     let mut output: Vec<StackValue> = Vec::new();
     let mut prev_is_escape = false;
