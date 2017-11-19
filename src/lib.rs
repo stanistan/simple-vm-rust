@@ -1,6 +1,7 @@
 extern crate failure;
 #[macro_use] extern crate failure_derive;
 
+
 use std::str::FromStr;
 use std::collections::HashMap;
 
@@ -186,6 +187,8 @@ stack_operations! {
     ToStr cast_str (a) push(String(format!("{}", a))),
     Println println (a) SideEffect(println!("{}", a)),
     Equals eq (a, b) push(Num(if a == b { 1 } else { 0 })),
+    LessThan < (Num(a), Num(b)) push(Num(if b < a { 1 } else { 0 })),
+    GreaterHan > (Num(a), Num(b)) push(Num(if b > a { 1 } else { 0 })),
     Mod % (Num(a), Num(b)) push(Num(b % a)),
     If if (f, t, Num(cond)) push(if cond == 0 { f } else { t }),
     Jump jmp (Num(a)) Jump(a as usize),
@@ -385,56 +388,89 @@ impl Machine {
 /// a list of tokens that can be parsed into StackValue.
 pub fn tokenize(input: &str) -> Result<Vec<StackValue>, StackError> {
 
-    let mut output: Vec<StackValue> = Vec::new();
-    let mut prev_is_escape = false;
-    let mut current_token = String::new();
+    struct ParserState {
+        prev_is_escape: bool,
+        ignore_til_eol: bool,
+        token: String,
+        tokens: Vec<StackValue>
+    }
+
+    impl ParserState {
+        fn push_char(&mut self, c: char) {
+            if !self.ignore_til_eol {
+                self.token.push(c);
+            }
+        }
+        fn push_token(&mut self) -> Result<(), StackError> {
+            if !self.token.is_empty() {
+                let value = StackValue::from_str(&self.token)?;
+                self.tokens.push(value);
+                self.token = String::new();
+            }
+            Ok(())
+        }
+        fn token_is_string(&mut self) -> bool {
+            self.token.starts_with('"')
+        }
+    }
+
+    let mut state = ParserState {
+        prev_is_escape: false,
+        ignore_til_eol: false,
+        tokens: Vec::new(),
+        token: String::new()
+    };
 
     for c in input.chars() {
+
+        if state.ignore_til_eol {
+            if c == '\n' {
+                state.ignore_til_eol = false;
+            }
+            continue;
+        }
+
         match c {
             '"' => {
-                current_token.push(c);
-                if !prev_is_escape && current_token.len() > 1 {
-                    let value = StackValue::from_str(&current_token)?;
-                    output.push(value);
-                    current_token = String::new();
+                state.push_char(c);
+                if !state.prev_is_escape && state.token.len() > 1 {
+                    state.push_token()?;
                 } else {
-                    prev_is_escape = false;
+                    state.prev_is_escape = false;
                 }
             },
             '\\' => {
-                if prev_is_escape {
-                    prev_is_escape = false;
-                    current_token.push(c);
+                if state.prev_is_escape {
+                    state.prev_is_escape = false;
+                    state.push_char(c);
                 } else {
-                    prev_is_escape = true;
+                    state.prev_is_escape = true;
+                }
+            },
+            '#' => {
+                if !state.token_is_string() {
+                    state.ignore_til_eol = true;
                 }
             },
             ' ' | '\n' | '\t' | '\r' => {
-                if !current_token.is_empty() {
-                    if current_token.starts_with('"') {
-                        current_token.push(c);
-                    } else {
-                        let value = StackValue::from_str(&current_token)?;
-                        output.push(value);
-                        current_token = String::new();
-                    }
+                if state.token_is_string() {
+                    state.push_char(c);
+                } else {
+                    state.push_token()?;
                 }
             },
             _ => {
-                current_token.push(c);
+                state.push_char(c);
             },
         }
     }
-    if !current_token.is_empty() {
-        let value = StackValue::from_str(&current_token)?;
-        output.push(value);
-    }
-    return Ok(output);
+    state.push_token()?;
+    return Ok(state.tokens);
 
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
 
     use StackValue::*;
     use super::tokenize;
@@ -448,6 +484,7 @@ mod test {
 
     #[test]
     fn test_tokenize() {
+        assert_tokens!( [ ], "# whatever man");
         assert_tokens!( [ ], "      ");
         assert_tokens!( [ Num(0) ], "0" );
         assert_tokens!( [ Num(0), Num(1) ], "0 1" );
@@ -492,6 +529,5 @@ mod test {
         #[should_panic(expected = "EmptyStack")]
         test_pop Num(0), ["cast_str"],
     }
-
 
 }
