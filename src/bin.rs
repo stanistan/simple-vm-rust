@@ -6,11 +6,13 @@ use std::io::prelude::*;
 use std::fs::File;
 
 pub fn main() {
-
     let file_path: String = env::args().skip(1).take(1).collect();
     if file_path.is_empty() {
         panic!("Expected a file path");
     }
+
+    let script_args: Vec<String> = env::args().skip(2).collect();
+    let args = tokenize(&script_args.join(" ")).expect("could not parse args");
 
     let mut f = File::open(&file_path).expect("File does not exist");
     let mut contents = String::new();
@@ -18,6 +20,6 @@ pub fn main() {
 
     let code = tokenize(&contents).expect("Could not tokenize file contents");
     let mut machine = Machine::new(code).expect("Could not create machine.");
-    let stats = machine.run().expect("Code execution failed");
+    let stats = machine.run(args).expect("Code execution failed");
     println!("{:#?}", stats);
 }

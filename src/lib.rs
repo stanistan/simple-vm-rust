@@ -325,11 +325,13 @@ impl FromStr for StackValue {
 
 #[derive(Debug, Default)]
 pub struct RunStats {
+    pub args: Vec<StackValue>,
     pub instructions: usize,
     pub calls: usize,
     pub jumps: usize,
     pub returns: usize,
     pub max_stack_size: usize,
+    pub max_stack_heap_size: usize,
     pub code_size: usize,
 }
 
@@ -455,19 +457,23 @@ impl Machine {
 
     /// Runs the machine and either returns an Ok with an empty result,
     /// or a StackError on failure.
-    pub fn run(&mut self) -> Result<Option<RunStats>, StackError> {
+    pub fn run(&mut self, args: Vec<StackValue>) -> Result<Option<RunStats>, StackError> {
 
         #[cfg(feature = "stats")]
         {
             let mut stats = RunStats::default();
             stats.code_size = self.code.heap_size_of_children();
+            stats.args = args.clone();
             self.stats = Some(stats);
+        }
+
+        for arg in args {
+            stack_operations!(MATCH self, push(arg),)?;
         }
 
         use StackValue::*;
         while self.instruction_ptr < self.code.len() {
 
-            // attempt to construct a StackValue from the current position in code
             let value: StackValue = match self.code.get(self.instruction_ptr) {
                 None => return Err(StackError::OutOfBounds),
                 Some(instruction) => instruction.clone()
@@ -498,6 +504,7 @@ impl Machine {
                     let stack_size = self.stack.len();
                     if stack_size > stats.max_stack_size {
                         stats.max_stack_size = stack_size;
+                        stats.max_stack_heap_size = self.stack.heap_size_of_children();
                     }
                 }
             }
