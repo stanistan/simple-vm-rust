@@ -1,6 +1,11 @@
 extern crate failure;
 #[macro_use] extern crate failure_derive;
 
+#[cfg(feature = "stats")]
+extern crate heapsize;
+
+#[cfg(feature = "stats")]
+use heapsize::*;
 
 use std::str::FromStr;
 use std::collections::HashMap;
@@ -233,6 +238,21 @@ fn push<T: Into<Vec<StackValue>>>(val: T) -> MachineOperation {
     MachineOperation::Push(val.into())
 }
 
+#[cfg(feature = "stats")]
+impl HeapSizeOf for StackValue {
+    fn heap_size_of_children(&self) -> usize {
+        use StackValue::*;
+        match *self {
+            Bool(ref b) => b.heap_size_of_children(),
+            Num(ref n) => n.heap_size_of_children(),
+            Label(ref s) => s.heap_size_of_children(),
+            Operation(ref o) => o.heap_size_of_children(),
+            String(ref s) => s.heap_size_of_children(),
+            PossibleLabel(ref s) => s.heap_size_of_children(),
+        }
+    }
+}
+
 mod util {
 
     pub fn exit(exit_code: i32) {
@@ -303,10 +323,14 @@ impl FromStr for StackValue {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct RunStats {
-    pub num_instructions: usize,
+    pub instructions: usize,
+    pub calls: usize,
+    pub jumps: usize,
+    pub returns: usize,
     pub max_stack_size: usize,
+    pub code_size: usize,
 }
 
 #[derive(Debug)]
@@ -316,6 +340,18 @@ pub struct Machine {
     return_stack: Vec<usize>,
     stack: Vec<StackValue>,
     labels: HashMap<String, usize>,
+    stats: Option<RunStats>,
+}
+
+macro_rules! stats {
+    (inc $m:ident $field:ident) => {
+        #[cfg(feature = "stats")]
+        {
+            if let Some(ref mut stats) = $m.stats {
+                stats.$field += 1;
+            }
+        }
+    }
 }
 
 impl Machine {
@@ -367,6 +403,7 @@ impl Machine {
             return_stack: Vec::new(),
             stack: Vec::new(),
             labels: labels,
+            stats: None,
         })
     }
 
@@ -388,13 +425,20 @@ impl Machine {
         use MachineOperation::*;
         match result {
             Call(to) => {
+                stats!(inc self calls);
                 self.return_stack.push(self.instruction_ptr);
                 self.jump(to);
             },
-            Jump(to) => self.jump(to),
+            Jump(to) => {
+                stats!(inc self jumps);
+                self.jump(to);
+            }
             Push(mut values) => self.stack.append(&mut values),
             Return => match self.return_stack.pop() {
-                Some(jump_to) => self.jump(jump_to),
+                Some(jump_to) => {
+                    stats!(inc self returns);
+                    self.jump(jump_to);
+                },
                 _ => return stack_operations!(ERR EmptyStack Return, return)
             },
             SideEffect(_) => (),
@@ -408,10 +452,11 @@ impl Machine {
     pub fn run(&mut self) -> Result<Option<RunStats>, StackError> {
 
         #[cfg(feature = "stats")]
-        let mut stats = RunStats {
-            num_instructions: 0,
-            max_stack_size: 0
-        };
+        {
+            let mut stats = RunStats::default();
+            stats.code_size = self.code.heap_size_of_children();
+            self.stats = Some(stats);
+        }
 
         use StackValue::*;
         while self.instruction_ptr < self.code.len() {
@@ -450,19 +495,18 @@ impl Machine {
 
             #[cfg(feature = "stats")]
             {
-                stats.num_instructions = stats.num_instructions + 1;
-                let stack_size = self.stack.len();
-                if stack_size > stats.max_stack_size {
-                    stats.max_stack_size = stack_size;
+                if let Some(ref mut stats) = self.stats {
+                    stats.instructions += 1;
+                    let stack_size = self.stack.len();
+                    if stack_size > stats.max_stack_size {
+                        stats.max_stack_size = stack_size;
+                    }
                 }
             }
+
         }
 
-        #[cfg(feature = "stats")]
-        return Ok(Some(stats));
-
-        #[cfg(not(feature = "stats"))]
-        return Ok(None);
+        Ok(self.stats.take())
     }
 
 }
