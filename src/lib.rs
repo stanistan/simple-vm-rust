@@ -339,7 +339,6 @@ pub struct Machine {
     instruction_ptr: usize,
     return_stack: Vec<usize>,
     stack: Vec<StackValue>,
-    labels: HashMap<String, usize>,
     stats: Option<RunStats>,
 }
 
@@ -357,6 +356,17 @@ macro_rules! stats {
 impl Machine {
     /// Create a new machine for the code.
     pub fn new(code: Vec<StackValue>) -> Result<Self, StackError> {
+        let code = Machine::preprocess(code)?;
+        Ok(Machine {
+            code: code,
+            instruction_ptr: 0,
+            return_stack: Vec::new(),
+            stack: Vec::new(),
+            stats: None,
+        })
+    }
+
+    fn preprocess(code: Vec<StackValue>) -> Result<Vec<StackValue>, StackError> {
         // The stack machine itself would know the labels
         // so we should know _before_ we run the code
         // whether or not there are malformed instructions.
@@ -368,43 +378,39 @@ impl Machine {
         // The hashmap is keyed on the label name, and the value is tuple of:
         // 1. Do we have a location in code to point this to? How many?
         // 2. How many times is this label referenced?
-        let mut labels_meta: HashMap<String, (Vec<usize>, usize)> = HashMap::new();
+        let mut code = code;
+        let mut labels_meta: HashMap<String, (Vec<usize>, Vec<usize>)> = HashMap::new();
 
         for (idx, value) in code.iter().enumerate() {
             if let &StackValue::Label(ref s) = value {
-                let entry = labels_meta.entry(s.clone()).or_insert((vec![], 0));
+                let entry = labels_meta.entry(s.clone()).or_insert((vec![], vec![]));
                 entry.0.push(idx + 1);
             } else if let &StackValue::PossibleLabel(ref s) = value {
-                let entry = labels_meta.entry(s.clone()).or_insert((vec![], 0));
-                entry.1 = entry.1 + 1;
+                let entry = labels_meta.entry(s.clone()).or_insert((vec![], vec![]));
+                entry.1.push(idx);
             }
         }
 
-        let mut labels = HashMap::new();
         for (key, val) in labels_meta.iter() {
             if val.0.len() > 1 {
                 return Err(StackError::MultipleLabelDefinitions{
                     label: key.clone(),
                     locations: val.0.clone(),
                 });
-            } else if val.0.is_empty() && val.1 > 0 {
+            } else if val.0.is_empty() && !val.1.is_empty() {
                 return Err(StackError::UndefinedLabel {
                     label: key.clone(),
-                    times: val.1,
+                    times: val.1.len(),
                 });
             } else {
-                labels.insert(key.clone(), val.0[0]);
+                let location = val.0[0];
+                for idx in val.1.iter() {
+                    code[*idx] = StackValue::Num(location as isize);
+                }
             }
         }
 
-        Ok(Machine {
-            code: code,
-            instruction_ptr: 0,
-            return_stack: Vec::new(),
-            stack: Vec::new(),
-            labels: labels,
-            stats: None,
-        })
+        Ok(code)
     }
 
     pub fn new_for_input(input: &str) -> Result<Self,StackError> {
@@ -462,17 +468,9 @@ impl Machine {
         while self.instruction_ptr < self.code.len() {
 
             // attempt to construct a StackValue from the current position in code
-            let value = match self.code.get(self.instruction_ptr) {
+            let value: StackValue = match self.code.get(self.instruction_ptr) {
                 None => return Err(StackError::OutOfBounds),
-                Some(instruction) => match instruction {
-                    &PossibleLabel(ref s) => match self.labels.get(s) {
-                        Some(pos) => Num(*pos as isize),
-                        _ => return Err(StackError::InvalidString {
-                            string: s.clone()
-                        })
-                    },
-                    any @ _ => any.clone(),
-                }
+                Some(instruction) => instruction.clone()
             };
 
             // move forward in instructions
