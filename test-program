@@ -1,15 +1,22 @@
-"Please enter a number:" read_number call
-"Please enter another:" read_number call
-+
-dup
-println
-double call
-println
+# get the three numbers
+"Ceiling number:" get call
+"Stepping number:" get call
+"Starting number:" get call
+"Here we go!" println
 
-stop
+dup println
 
-read_number:
+loop:
+    over + dup println
+    rot over over
+    >= finish continue if jmp
+
+continue:
+    rot rot
+    loop jmp
+
+finish:
+    stop
+
+get:
     println read cast_int return
-
-double:
-    dup + return
