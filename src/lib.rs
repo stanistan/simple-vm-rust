@@ -634,7 +634,7 @@ mod tests {
                     use Machine;
                     let code = super::tokenize($code).unwrap();
                     let mut machine = Machine::new(code).unwrap();
-                    machine.run().unwrap();
+                    machine.run(vec![]).unwrap();
                     assert_eq!($v, machine.stack[0]);
                 }
             )+

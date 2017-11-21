@@ -1,14 +1,64 @@
 # simple vm rust
 
 This is an implementation of a super simple stack based VM in Rust, as a learning
-exercise for myself.
+exercise for myself. Absolutely do not use this for anything real or production worthy.
+
+The language and APIs will change over time.
 
 A lot of this is based on https://csl.name/post/vm, but while that is written in Python,
 this is in not :) So there are obviously some more constraints in how this is run.
 
 ## Dependencies
 
-- `Failure` for errors, this might be too much for something so simple and not really meant
-  to be used anywhere, but I wanted to try it out.
+1. the `nightly` compiler in order to hook into `libc` for mem usage.
+2. `failure` for errors (probably overkill, but 🤷)
+
+## The Language
+
+Right now this is a super simple stack based language that supports:
+
+1. integers (no floats yet)
+2. strings
+3. labels
+4. jmp / call / return
+
+It does allocation for every time something is moved on the stack... instead of using
+references or reference counting, values will be heap allocated every time they're pushed,
+and cloned from the code when it's being executed, this is currently pretty inefficient and
+I'm hoping to make it better.
 
 ## Running
+
+Assuming you have [`rustup`](https://www.rustup.rs).
+
+```
+# This is important because I'm using `#![feature(libc)]` which is
+# currently not available in stable rust.
+rustup override set nightly
+```
+
+#### tests
+
+```
+cargo test
+```
+
+#### Examples
+
+Run the fib program for the 5th fibonacci number (debug).
+
+```
+cargo run -- examples/fib 5
+```
+
+Run this in release mode.
+
+```
+cargo run --release -- examples/fib 5
+```
+
+Run this with `stats`, `mem-usage`, and `debug` outputs:
+
+```
+cargo run --release --features=stats,mem-usage,debug -- examples/fib 5
+```
