@@ -33,12 +33,6 @@ I'm hoping to make it better.
 
 Assuming you have [`rustup`](https://www.rustup.rs).
 
-```
-# This is important because I'm using `#![feature(libc)]` which is
-# currently not available in stable rust.
-rustup override set nightly
-```
-
 #### tests
 
 ```
@@ -59,8 +53,10 @@ Run this in release mode.
 cargo run --release -- examples/fib 5
 ```
 
-Run this with `stats`, `mem-usage`, and `debug` outputs:
+---
+
+Run this with `stats`, `mem-usage`, and `debug` outputs, assuming you have [`rustup`](https://www.rustup.rs):
 
 ```
-cargo run --release --features=stats,mem-usage,debug -- examples/fib 5
+rustup run nightly cargo run --release --features=stats,mem-usage,debug -- examples/fib 5
 ```
