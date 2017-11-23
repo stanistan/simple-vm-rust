@@ -1,5 +1,7 @@
 # simple vm rust
 
+[![Build Status](https://travis-ci.org/stanistan/simple-vm-rust.svg?branch=master)](https://travis-ci.org/stanistan/simple-vm-rust)
+
 This is an implementation of a super simple stack based VM in Rust, as a learning
 exercise for myself. Absolutely do not use this for anything real or production worthy.
 
