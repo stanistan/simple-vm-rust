@@ -467,9 +467,8 @@ impl Machine {
             self.stats = Some(stats);
         }
 
-        for arg in args {
-            stack_operations!(MATCH self, push(arg),)?;
-        }
+        // apply arguments
+        stack_operations!(MATCH self, push(args),)?;
 
         use StackValue::*;
         while self.instruction_ptr < self.code.len() {

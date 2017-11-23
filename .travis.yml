@@ -4,6 +4,7 @@ script:
     - cargo test
     - cargo test --features=stats
     - cargo test --features=debug
+    - cargo run -- examples/fib 5
 rust:
     - stable
     - nightly
