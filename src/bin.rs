@@ -1,4 +1,4 @@
-#![feature(libc)]
+#![cfg_attr(feature="mem-usage", feature(libc))]
 extern crate simple_vm;
 
 use simple_vm::{Machine, tokenize};
