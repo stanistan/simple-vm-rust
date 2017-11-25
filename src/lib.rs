@@ -1,3 +1,6 @@
+#![cfg_attr(feature = "bench", feature(test))]
+#[cfg(feature = "bench")] extern crate test;
+
 extern crate failure;
 #[macro_use] extern crate failure_derive;
 
@@ -61,7 +64,7 @@ pub enum StackError {
 ///
 /// These are the operations that StackOperation is built on
 /// and what they return to the machine.
-enum MachineOperation {
+pub enum MachineOperation {
     Call(usize),
     Jump(usize),
     Push(Vec<StackValue>),
@@ -421,7 +424,7 @@ impl Machine {
     }
 
     /// Move the instruction pointer to a given address.
-    fn jump(&mut self, address: usize) {
+    pub fn jump(&mut self, address: usize) {
         // TODO check for overflow here
         self.instruction_ptr = address;
     }
@@ -429,7 +432,7 @@ impl Machine {
     /// Dispatch given the result from the stack operation, which gets consumed here.
     ///
     /// Returns true or false to indicate whether the `run` loop should continue.
-    fn dispatch(&mut self, result: MachineOperation) -> Result<bool,StackError> {
+    pub fn dispatch(&mut self, result: MachineOperation) -> Result<bool,StackError> {
         use MachineOperation::*;
         match result {
             Call(to) => {
@@ -603,8 +606,11 @@ pub fn tokenize(input: &str) -> Result<Vec<StackValue>, StackError> {
 #[cfg(test)]
 mod tests {
 
+    use super::*;
     use StackValue::*;
-    use super::tokenize;
+
+    #[cfg(feature = "bench")]
+    use test::Bencher;
 
     macro_rules! assert_tokens {
         ([ $($token:expr),* ], $test:expr) => {{
@@ -673,6 +679,33 @@ mod tests {
 
         #[should_panic(expected = "MultipleLabelDefinitions")]
         test_multiple_label_definitions Num(0), [ "a: a:" ],
+    }
+
+
+    #[cfg(feature = "bench")] #[bench]
+    fn bench_fib_1(b: &mut Bencher) {
+        b.iter(|| {
+            let code = tokenize(include_str!("../examples/fib_no_print")).unwrap();
+            let mut machine = Machine::new(code).unwrap();
+            machine.run(tokenize("1").unwrap()).unwrap();
+        })
+    }
+
+    #[cfg(feature = "bench")] #[bench]
+    fn bench_fib_5(b: &mut Bencher) {
+        b.iter(|| {
+            let code = tokenize(include_str!("../examples/fib_no_print")).unwrap();
+            let mut machine = Machine::new(code).unwrap();
+            machine.run(tokenize("5").unwrap()).unwrap();
+        })
+    }
+    #[cfg(feature = "bench")] #[bench]
+    fn bench_fib_10(b: &mut Bencher) {
+        b.iter(|| {
+            let code = tokenize(include_str!("../examples/fib_no_print")).unwrap();
+            let mut machine = Machine::new(code).unwrap();
+            machine.run(tokenize("10").unwrap()).unwrap();
+        })
     }
 
 }

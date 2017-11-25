@@ -7,6 +7,9 @@ authors = ["Stan Rozenraukh <stan@stanistan.com>"]
 doctest = false
 path = "src/lib.rs"
 
+[profile.release]
+debug = true
+
 [features]
 # This will print out data about the stack (and return stack)
 # _before_ an operation is performed, what the operation is,
@@ -24,6 +27,9 @@ stats = [ "heapsize" ]
 
 # This will print out stats from jemalloc...
 mem-usage = [ ]
+
+# for bench marking which uses the nightly compiler
+bench = []
 
 [[bin]]
 name = "simple_vm"

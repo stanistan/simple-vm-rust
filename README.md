@@ -10,11 +10,6 @@ The language and APIs will change over time.
 A lot of this is based on https://csl.name/post/vm, but while that is written in Python,
 this is in not :) So there are obviously some more constraints in how this is run.
 
-## Dependencies
-
-1. the `nightly` compiler in order to hook into `libc` for mem usage.
-2. `failure` for errors (probably overkill, but 🤷)
-
 ## The Language
 
 Right now this is a super simple stack based language that supports:
@@ -59,4 +54,12 @@ Run this with `stats`, `mem-usage`, and `debug` outputs, assuming you have [`rus
 
 ```
 rustup run nightly cargo run --release --features=stats,mem-usage,debug -- examples/fib 5
+```
+
+---
+
+Benchmarking
+
+```
+rustup run nightly cargo bench --features=bench
 ```
