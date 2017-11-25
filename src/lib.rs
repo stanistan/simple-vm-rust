@@ -326,7 +326,8 @@ impl FromStr for StackValue {
     }
 }
 
-#[derive(Debug, Default)]
+#[cfg(feature = "stats")]
+#[derive(Clone, Debug, Default)]
 pub struct RunStats {
     pub args: Vec<StackValue>,
     pub instructions: usize,
@@ -338,13 +339,17 @@ pub struct RunStats {
     pub code_size: usize,
 }
 
+#[cfg(not(feature = "stats"))]
+#[derive(Clone, Debug, Default)]
+pub struct RunStats;
+
 #[derive(Debug)]
 pub struct Machine {
     code: Vec<StackValue>,
     instruction_ptr: usize,
     return_stack: Vec<usize>,
     stack: Vec<StackValue>,
-    stats: Option<RunStats>,
+    stats: RunStats,
 }
 
 macro_rules! stats {
@@ -361,17 +366,17 @@ macro_rules! stats {
 impl Machine {
     /// Create a new machine for the code.
     pub fn new(code: Vec<StackValue>) -> Result<Self, StackError> {
-        let code = Machine::preprocess(code)?;
+        let code = Self::preprocess(code)?;
         Ok(Machine {
             code: code,
             instruction_ptr: 0,
             return_stack: Vec::new(),
             stack: Vec::new(),
-            stats: None,
+            stats: RunStats::default(),
         })
     }
 
-    fn preprocess(code: Vec<StackValue>) -> Result<Vec<StackValue>, StackError> {
+    pub fn preprocess(code: Vec<StackValue>) -> Result<Vec<StackValue>, StackError> {
         // The stack machine itself would know the labels
         // so we should know _before_ we run the code
         // whether or not there are malformed instructions.
@@ -458,20 +463,26 @@ impl Machine {
         return Ok(true);
     }
 
-    /// Runs the machine and either returns an Ok with an empty result,
-    /// or a StackError on failure.
-    pub fn run(&mut self, args: Vec<StackValue>) -> Result<Option<RunStats>, StackError> {
+    #[cfg(feature = "stats")]
+    /// Set up the stats for this current run call.
+    pub fn setup_stats(&mut self, args: Vec<StackValue>) {
+        self.stats.code_size = self.code.heap_size_of_children();
+        self.stats.args = args;
+    }
+
+    fn apply_args(&mut self, args: Vec<StackValue>) -> Result<bool,StackError> {
+        stack_operations!(MATCH self, push(args),)
+    }
+
+    /// Runs the machine with given arguments, and either a Result that might contain
+    /// run stats if this was compiled with `features=stats`, otherwise an StackError
+    /// if this failed for any reason.
+    pub fn run(&mut self, args: Vec<StackValue>) -> Result<RunStats, StackError> {
 
         #[cfg(feature = "stats")]
-        {
-            let mut stats = RunStats::default();
-            stats.code_size = self.code.heap_size_of_children();
-            stats.args = args.clone();
-            self.stats = Some(stats);
-        }
+        self.setup_stats(args.clone());
 
-        // apply arguments
-        stack_operations!(MATCH self, push(args),)?;
+        self.apply_args(args)?;
 
         use StackValue::*;
         while self.instruction_ptr < self.code.len() {
@@ -513,7 +524,7 @@ impl Machine {
 
         }
 
-        Ok(self.stats.take())
+        Ok(self.stats.clone())
     }
 
 }

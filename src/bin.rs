@@ -40,10 +40,12 @@ pub fn main() {
 
     let code = tokenize(&contents).expect("Could not tokenize file contents");
     let mut machine = Machine::new(code).expect("Could not create machine.");
+
+    #[allow(unused_variables)]
     let stats = machine.run(args).expect("Code execution failed");
-    if let Some(stats) = stats {
-        println!("{:#?}", stats);
-    }
+
+    #[cfg(feature = "stats")]
+    println!("{:#?}", stats);
 
     #[cfg(feature="mem-usage")]
     unsafe {
