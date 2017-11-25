@@ -355,11 +355,7 @@ pub struct Machine {
 macro_rules! stats {
     (inc $m:ident $field:ident) => {
         #[cfg(feature = "stats")]
-        {
-            if let Some(ref mut stats) = $m.stats {
-                stats.$field += 1;
-            }
-        }
+        { $m.stats.$field += 1; }
     }
 }
 
@@ -512,13 +508,11 @@ impl Machine {
 
             #[cfg(feature = "stats")]
             {
-                if let Some(ref mut stats) = self.stats {
-                    stats.instructions += 1;
-                    let stack_size = self.stack.len();
-                    if stack_size > stats.max_stack_size {
-                        stats.max_stack_size = stack_size;
-                        stats.max_stack_heap_size = self.stack.heap_size_of_children();
-                    }
+                self.stats.instructions += 1;
+                let stack_size = self.stack.len();
+                if stack_size > self.stats.max_stack_size {
+                    self.stats.max_stack_size = stack_size;
+                    self.stats.max_stack_heap_size = self.stack.heap_size_of_children();
                 }
             }
 
