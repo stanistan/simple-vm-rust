@@ -30,7 +30,7 @@ Assuming you have [`rustup`](https://www.rustup.rs).
 
 #### tests
 
-```
+```sh
 cargo test
 ```
 
@@ -38,13 +38,13 @@ cargo test
 
 Run the fib program for the 5th fibonacci number (debug).
 
-```
+```sh
 cargo run -- examples/fib 5
 ```
 
 Run this in release mode.
 
-```
+```sh
 cargo run --release -- examples/fib 5
 ```
 
@@ -52,7 +52,7 @@ cargo run --release -- examples/fib 5
 
 Run this with `stats`, `mem-usage`, and `debug` outputs, assuming you have [`rustup`](https://www.rustup.rs):
 
-```
+```sh
 rustup run nightly cargo run --release --features=stats,mem-usage,debug -- examples/fib 5
 ```
 
@@ -63,3 +63,44 @@ Benchmarking
 ```
 rustup run nightly cargo bench --features=bench
 ```
+
+#### Getting Flamegraphs
+
+(Using [this](https://github.com/brendangregg/FlameGraph))
+
+The `Cargo.toml` has `debug=true` in the `[profile.release]` section so that symbols
+don't get mangled and we can do perf tracing.
+
+```sh
+cargo build --release
+# trace for doing running `examples/fib 10`
+sudo dtrace \
+    -c 'target/release/simple_vm examples/fib 10' \
+    -o stack.out \
+    -n 'profile-10001 { @[ustack()] = count() }'
+stackcollapse.pl stack.out | flamegraph.pl > graph.svg
+open graph.svg
+```
+
+If trying to get a trace for a single benchmark:
+
+```sh
+# deleting this to simplify finding the right binary.
+rm -rf target/release/
+cargo clean
+rustup run nightly cargo bench --no-run
+```
+
+One of the files matching `target/release/simple_vm-*` will end up being the correct executable.
+
+```sh
+sudo dtrace \
+    -c 'target/release/simple_vm-$HASH --bench $TEST' \
+    -o stack.out \
+    -n 'profile-10001 { @[ustack()] = count() }'
+
+stackcollapse.pl stack.out | flamegraph.pl > graph.svg
+open graph.svg
+```
+
+![bench.svg](./bench.svg)

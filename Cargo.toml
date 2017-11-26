@@ -8,6 +8,7 @@ doctest = false
 path = "src/lib.rs"
 
 [profile.release]
+# Let's not mangle symbols.
 debug = true
 
 [features]
