@@ -487,36 +487,42 @@ impl Machine {
     /// if this failed for any reason.
     pub fn run(&mut self, args: Vec<StackValue>) -> Result<RunStats, StackError> {
 
+        use StackValue::*;
+
         #[cfg(feature = "stats")]
         self.setup_stats(args.clone());
 
         self.apply_args(args)?;
 
-        use StackValue::*;
         while self.instruction_ptr < self.code.len() {
 
-            let value: StackValue = match self.code.get(self.instruction_ptr) {
-                None => return Err(StackError::OutOfBounds),
-                Some(instruction) => instruction.clone()
+            // we borrow _first_ because if this is a label, we
+            // can just keep moving on, if it isn't a label,
+            // we should clone it to be able to dispatch it
+            // given the _mutable_ stack machine.
+            let value: StackValue = {
+                let value: &StackValue = match self.code.get(self.instruction_ptr) {
+                    None => return Err(StackError::OutOfBounds),
+                    Some(ref instruction) => instruction
+                };
+
+                self.instruction_ptr = self.instruction_ptr + 1;
+
+                if let &Label(_) = value {
+                    continue;
+                }
+
+                // we know we're going to consume this value
+                value.clone()
             };
 
-            // move forward in instructions
-            self.instruction_ptr = self.instruction_ptr + 1;
-
-            // evalate the value, if it's a label we just skip,
-            // if it's an operation, we dispatch it,
-            // otherwise we push the value onto the stack.
-            match value {
-                Label(_) => (),
-                Operation(op) => {
-                    if !op.dispatch(self)? {
-                        break;
-                    }
-                },
-                _ => {
-                    stack_operations!(MATCH self, push(value),)?;
-                },
-            };
+            if let StackValue::Operation(op) = value {
+                if !op.dispatch(self)? {
+                    break;
+                }
+            } else {
+                stack_operations!(MATCH self, push(value),)?;
+            }
 
             #[cfg(feature = "stats")]
             {
