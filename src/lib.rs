@@ -13,52 +13,11 @@ use heapsize::*;
 use std::str::FromStr;
 use std::collections::HashMap;
 
-#[derive(Debug, Fail)]
-pub enum StackError {
-    /// Error condition for when we try to pop a value off
-    /// the stack and it's empty for the given expression.
-    #[fail(display="Cannot pop an empty stack, looking for {} in {}", arg_pattern, expr)]
-    EmptyStack {
-        arg_pattern: String,
-        expr: String
-    },
-    /// Error condition for when a given string does not correspond to
-    /// any defined operation.
-    #[fail(display = "Invalid operation: {}", name)]
-    InvalidOperation {
-        name: String
-    },
-    /// Error condition when we could not parse the string.
-    #[fail(display = "Could not parse \"{}\"", string)]
-    InvalidString {
-        string: String
-    },
-    /// Error condition when a label is defined in multiple locations
-    /// in the source.
-    #[fail(display = "Label {} defined in locations: {:?}", label, locations)]
-    MultipleLabelDefinitions {
-        label: String,
-        locations: Vec<usize>,
-    },
-    /// Error condition when the instruction pointer is out of bounds
-    /// for the code provided to the machine.
-    #[fail(display = "Out of bounds instruction pointer")]
-    OutOfBounds,
-    /// Error condition for when the pattern provided for the
-    /// value we've popped off the stack does not match the
-    /// argument pattern provided for the expression.
-    #[fail(display = "Pattern mismatch, looking for {} in {}", arg_pattern, expr)]
-    PatternMismatch {
-        arg_pattern: String,
-        expr: String
-    },
+pub mod error;
+use error::StackError;
 
-    #[fail(display = "Program referes to undefined \"{}\" {} time(s)", label, times)]
-    UndefinedLabel {
-        label: String,
-        times: usize
-    },
-}
+#[macro_use]
+pub mod stack_operations;
 
 /// Primitive machine operations.
 ///
@@ -73,149 +32,7 @@ pub enum MachineOperation {
     Stop,
 }
 
-/// If compiled with --features=debug, this will print
-/// debugging information to stdout.
-macro_rules! debug {
-    ($string:expr, $($rest:expr),*) => {{
-        #[cfg(feature = "debug")]
-        println!($string, $($rest),*);
-    }}
-}
-
-macro_rules! stack_operations {
-
-    (DEBUG $machine:ident $log:expr, $e:expr, $t:ty) => {{
-        debug!("----------",);
-        debug!("before:\t{:?}\t{:?}", $machine.stack, $machine.return_stack);
-        debug!("op:\t{}", stringify!($log));
-        let re: $t = $e;
-        debug!("after:\t{:?}\t{:?}", $machine.stack, $machine.return_stack);
-        re
-    }};
-
-    // This means we can't evaluate the expression.
-    (ERR $error_type:ident $t:pat, $e:expr) => {
-        Err(StackError::$error_type {
-            arg_pattern: stringify!($t).to_owned(),
-            expr: stringify!($e).to_owned(),
-        })
-    };
-
-    (POP $machine:ident) => {
-        stack_operations!(DEBUG $machine Pop, $machine.stack.pop(), Option<StackValue>)
-    };
-
-    // The MATCH variants of this macro are so that we can recursively
-    // generate code to pattern match on the arguments in the main
-    // macro entrypoint...
-    //
-    // This is the LEAF recursive match pattern for when we have gone through
-    // every single one of the potential variants and everything has succeeded.
-    //
-    // The expression is evaluated and given the result type,
-    // we do something with the stack.
-    (MATCH $machine:ident, $e:expr,) => {
-        stack_operations!(
-            DEBUG $machine $e,
-            $machine.dispatch($e),
-            Result<bool, StackError>
-        )
-    };
-
-    // The MATCH variants of this macro are so that we can recursively
-    // generate code to pattern match on the arguments in the main
-    // macro entrypoint...
-    //
-    // This is the penultimate when we are down to the last argument,
-    // and need to pop one last value off of the stack.
-    (MATCH $machine:ident, $e:expr, $t:pat) => {
-        match stack_operations!(POP $machine) {
-            Some($t) => stack_operations!(MATCH $machine, $e,),
-            None => stack_operations!(ERR EmptyStack $t, $e),
-            _ => stack_operations!(ERR PatternMismatch $t, $e),
-        }
-    };
-
-    // The MATCH variants of this macro are so that we can recursively
-    // generate code to pattern match on the arguments in the main
-    // macro entrypoint...
-    //
-    // This is the main recursion point where we start with a pattern
-    // to pop an argument from the stack and match it, and if it succeeds
-    // continue to recurse with the $rest.
-    (MATCH $machine:ident, $e:expr, $t:pat, $($rest:pat),*) => {
-        match stack_operations!(POP $machine) {
-            Some($t) => stack_operations!(MATCH $machine, $e, $($rest),*),
-            None => stack_operations!(ERR EmptyStack $t, $e),
-            _ => stack_operations!(ERR PatternMismatch $t, $e),
-        }
-    };
-
-    // This is the MAIN entry point for the macro.
-    (
-        $($(#[$attr:meta])* $t:ident $s:tt ($($type:pat),*) $e:expr,)+
-    ) => {
-
-        /// Generated enum of all the user-accessible primitive stack operations.
-        ///
-        /// This is generated by the `stack_operations` macro.
-        ///
-        /// The enum name is the first arg to the macro.
-        #[derive(Clone, PartialEq, Debug)]
-        pub enum StackOperation {
-            $(
-                $(#[$attr])* $t,
-            )+
-        }
-
-        /// Each stack operation is able to be constructed from a string.
-        /// This is the _second_ arg to the `stack_operations` macro.
-        impl FromStr for StackOperation {
-            type Err = StackError;
-            fn from_str(s: &str) -> Result<Self, Self::Err> {
-                match s {
-                    $( stringify!($s) => Ok(StackOperation::$t), )+
-                    _ => Err(StackError::InvalidOperation {
-                        name: s.into()
-                    })
-                }
-            }
-        }
-
-        #[allow(non_snake_case)]
-        pub mod stack_operation {
-            //!
-            //! The `stack_operation` module is generated by the `stack_operations!` macro.
-            //!
-            //! Each of its submodules has an `execute` method which operates on a `Machine`.
-            //!
-            use super::*;
-            $(pub mod $t {
-                //! This is a generated module for a StackOperation.
-                use super::*;
-                /// Generated method by the `stack_operations!` macro.
-                #[allow(unreachable_patterns, unused_imports, unreachable_code)]
-                pub fn execute(machine: &mut Machine) -> Result<bool, StackError> {
-                    use StackValue::*;
-                    use MachineOperation::*;
-                    stack_operations!(MATCH machine, $e, $($type),*)
-                }
-            })+
-        }
-
-        impl StackOperation {
-            /// Dispatch a generated `StackOperation` variant to its relevant
-            /// `stack_operation::$variantName::execute()` function.
-            pub fn dispatch(&self, machine: &mut Machine) -> Result<bool,StackError> {
-                match *self {
-                    $(StackOperation::$t => stack_operation::$t::execute(machine),)+
-                }
-            }
-        }
-    }
-}
-
-stack_operations! {
+ops! {
     Plus + (Num(a), Num(b)) push(Num(a + b)),
     Minus - (Num(a), Num(b)) push(Num(b - a)),
     Multiply * (Num(a), Num(b)) push(Num(a * b)),
@@ -342,6 +159,10 @@ impl FromStr for StackValue {
     }
 }
 
+/// If used with the feature=stats, this will be a struct populated
+/// with runtime data about how the `Machine` is performing.
+///
+/// Otherwise it is empty!
 #[cfg(feature = "stats")]
 #[derive(Clone, Debug, Default)]
 pub struct RunStats {
@@ -355,13 +176,19 @@ pub struct RunStats {
     pub code_size: usize,
 }
 
+/// If used with the feature=stats, this will be a struct populated
+/// with runtime data about how the `Machine` is performing.
+///
+/// Otherwise it is empty!
 #[cfg(not(feature = "stats"))]
 #[derive(Clone, Debug, Default)]
 pub struct RunStats;
 
+pub type Code = Vec<StackValue>;
+
 #[derive(Debug)]
 pub struct Machine {
-    code: Vec<StackValue>,
+    code: Code,
     instruction_ptr: usize,
     return_stack: Vec<usize>,
     stack: Vec<StackValue>,
@@ -379,7 +206,7 @@ impl Machine {
     /// Create a new machine for the code.
     ///
     /// This runs through a `preprocess` step.
-    pub fn new(code: Vec<StackValue>) -> Result<Self, StackError> {
+    pub fn new(code: Code) -> Result<Self, StackError> {
         let code = Self::preprocess(code)?;
         Ok(Machine {
             code: code,
@@ -390,7 +217,13 @@ impl Machine {
         })
     }
 
-    pub fn preprocess(code: Vec<StackValue>) -> Result<Vec<StackValue>, StackError> {
+    /// Takes `Code` as input and finds and replaces the
+    /// labels with their actual positions.
+    ///
+    /// This will return `StackError` if there are labels used
+    /// that have never been defined, or if there are labels
+    /// that have been defined multiple times.
+    pub fn preprocess(code: Code) -> Result<Code, StackError> {
         // The stack machine itself would know the labels
         // so we should know _before_ we run the code
         // whether or not there are malformed instructions.
@@ -447,6 +280,8 @@ impl Machine {
         Ok(code)
     }
 
+    /// Given an input string program, this returns a stack
+    /// machine or an error based on not being to create/parse it.
     pub fn new_for_input(input: &str) -> Result<Self,StackError> {
         let code = tokenize(input)?;
         Self::new(code)
@@ -479,7 +314,7 @@ impl Machine {
                     stats!(inc self returns);
                     self.jump(jump_to);
                 },
-                _ => return stack_operations!(ERR EmptyStack Return, return)
+                _ => return ops!(ERR EmptyStack Return, return)
             },
             SideEffect(_) => (),
             Stop => return Ok(false),
@@ -487,15 +322,15 @@ impl Machine {
         return Ok(true);
     }
 
-    #[cfg(feature = "stats")]
     /// Set up the stats for this current run call.
+    #[cfg(feature = "stats")]
     pub fn setup_stats(&mut self, args: Vec<StackValue>) {
         self.stats.code_size = self.code.heap_size_of_children();
         self.stats.args = args;
     }
 
     fn apply_args(&mut self, args: Vec<StackValue>) -> Result<bool,StackError> {
-        stack_operations!(MATCH self, push(args),)
+        ops!(MATCH self, push(args),)
     }
 
     /// Runs the machine with given arguments, and either a Result that might contain
@@ -537,7 +372,7 @@ impl Machine {
                     break;
                 }
             } else {
-                stack_operations!(MATCH self, push(value),)?;
+                ops!(MATCH self, push(value),)?;
             }
 
             #[cfg(feature = "stats")]
@@ -559,7 +394,7 @@ impl Machine {
 
 /// Given a string it should break this up into
 /// a list of tokens that can be parsed into StackValue.
-pub fn tokenize(input: &str) -> Result<Vec<StackValue>, StackError> {
+pub fn tokenize(input: &str) -> Result<Code, StackError> {
 
     struct ParserState {
         prev_is_escape: bool,
