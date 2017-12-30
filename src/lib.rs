@@ -361,6 +361,8 @@ macro_rules! stats {
 
 impl Machine {
     /// Create a new machine for the code.
+    ///
+    /// This runs through a `preprocess` step.
     pub fn new(code: Vec<StackValue>) -> Result<Self, StackError> {
         let code = Self::preprocess(code)?;
         Ok(Machine {
@@ -384,35 +386,45 @@ impl Machine {
         // The hashmap is keyed on the label name, and the value is tuple of:
         // 1. Do we have a location in code to point this to? How many?
         // 2. How many times is this label referenced?
-        let mut code = code;
-        let mut labels_meta: HashMap<String, (Vec<usize>, Vec<usize>)> = HashMap::new();
+        let replacements = {
 
-        for (idx, value) in code.iter().enumerate() {
-            if let &StackValue::Label(ref s) = value {
-                let entry = labels_meta.entry(s.clone()).or_insert((vec![], vec![]));
-                entry.0.push(idx + 1);
-            } else if let &StackValue::PossibleLabel(ref s) = value {
-                let entry = labels_meta.entry(s.clone()).or_insert((vec![], vec![]));
-                entry.1.push(idx);
-            }
-        }
+            let mut labels_meta: HashMap<&str, (Vec<usize>, Vec<usize>)> = HashMap::new();
+            let mut replacements = vec![];
 
-        for (key, val) in labels_meta.iter() {
-            if val.0.len() > 1 {
-                return Err(StackError::MultipleLabelDefinitions{
-                    label: key.clone(),
-                    locations: val.0.clone(),
-                });
-            } else if val.0.is_empty() && !val.1.is_empty() {
-                return Err(StackError::UndefinedLabel {
-                    label: key.clone(),
-                    times: val.1.len(),
-                });
-            } else {
-                let location = val.0[0];
-                for idx in val.1.iter() {
-                    code[*idx] = StackValue::Num(location as isize);
+            for (idx, value) in code.iter().enumerate() {
+                if let &StackValue::Label(ref s) = value {
+                    let entry = labels_meta.entry(s).or_insert((vec![], vec![]));
+                    entry.0.push(idx + 1);
+                } else if let &StackValue::PossibleLabel(ref s) = value {
+                    let entry = labels_meta.entry(s).or_insert((vec![], vec![]));
+                    entry.1.push(idx);
                 }
+            }
+
+            for (key, val) in labels_meta.into_iter() {
+                if val.0.len() > 1 {
+                    return Err(StackError::MultipleLabelDefinitions{
+                        label: (*key).into(),
+                        locations: val.0.clone(),
+                    });
+                } else if val.0.is_empty() && !val.1.is_empty() {
+                    return Err(StackError::UndefinedLabel {
+                        label: (*key).into(),
+                        times: val.1.len(),
+                    });
+                } else {
+                    replacements.push((val.0[0], val.1));
+                }
+            }
+
+            replacements
+        };
+
+        let mut code = code;
+        for replacement in replacements {
+            let place = replacement.0 as isize;
+            for location in replacement.1 {
+                code[location] = StackValue::Num(place);
             }
         }
 
