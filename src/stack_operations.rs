@@ -1,8 +1,8 @@
-
 /// This macro generates the `StackOperations` enum,
 /// its implementations, how its parsed, and the modules/functions
 /// for how each of the operations affects `Machine` state.
-#[macro_export] macro_rules! ops {
+#[macro_export]
+macro_rules! ops {
 
     // This means we can't evaluate the expression.
     (ERR $error_type:ident $t:pat, $e:expr) => {
@@ -98,7 +98,7 @@
             //!
             use super::*;
             $(pub mod $t {
-                //! This is a generated module for a StackOperation.
+                //! This is a generated module for a `StackOperation`.
                 use super::*;
                 /// Generated method by the `ops!` macro.
                 #[allow(unreachable_patterns, unused_imports, unreachable_code)]

@@ -1,8 +1,10 @@
 #![cfg_attr(feature = "bench", feature(test))]
-#[cfg(feature = "bench")] extern crate test;
+#[cfg(feature = "bench")]
+extern crate test;
 
 extern crate failure;
-#[macro_use] extern crate failure_derive;
+#[macro_use]
+extern crate failure_derive;
 
 #[cfg(feature = "stats")]
 extern crate heapsize;
@@ -21,7 +23,7 @@ pub mod stack_operations;
 
 /// Primitive machine operations.
 ///
-/// These are the operations that StackOperation is built on
+/// These are the operations that `StackOperation` is built on
 /// and what they return to the machine.
 pub enum MachineOperation {
     Call(usize),
@@ -96,8 +98,8 @@ mod util {
     }
 
     pub fn sleep_ms(duration: u64) {
-        use ::std::thread;
-        use ::std::time;
+        use std::thread;
+        use std::time;
         thread::sleep(time::Duration::from_millis(duration))
     }
 
@@ -140,18 +142,18 @@ impl FromStr for StackValue {
         use StackValue::*;
         let len = s.len();
         if s == "true" {
-            return Ok(StackValue::Bool(true));
+            Ok(StackValue::Bool(true))
         } else if s == "false" {
-            return Ok(StackValue::Bool(false));
+            Ok(StackValue::Bool(false))
         } else if let Ok(n) = s.parse::<isize>() {
             return Ok(Num(n));
         } else if let Ok(op) = StackOperation::from_str(s) {
             return Ok(Operation(op));
-        } if len > 1 && s.starts_with('"') && s.ends_with('"') {
-            let substr = unsafe { s.get_unchecked(1..(len-1)) };
+        } else if len > 1 && s.starts_with('"') && s.ends_with('"') {
+            let substr = unsafe { s.get_unchecked(1..(len - 1)) };
             return Ok(String(substr.to_owned()));
         } else if len > 1 && s.ends_with(':') {
-            let substr = unsafe { s.get_unchecked(0..(len-1)) };
+            let substr = unsafe { s.get_unchecked(0..(len - 1)) };
             return Ok(Label(substr.to_owned()));
         } else {
             return Ok(PossibleLabel(s.to_owned()));
@@ -236,23 +238,22 @@ impl Machine {
         // 1. Do we have a location in code to point this to? How many?
         // 2. How many times is this label referenced?
         let replacements = {
-
             let mut labels_meta: HashMap<&str, (Vec<usize>, Vec<usize>)> = HashMap::new();
             let mut replacements = vec![];
 
             for (idx, value) in code.iter().enumerate() {
-                if let &StackValue::Label(ref s) = value {
+                if let StackValue::Label(ref s) = *value {
                     let entry = labels_meta.entry(s).or_insert((vec![], vec![]));
                     entry.0.push(idx + 1);
-                } else if let &StackValue::PossibleLabel(ref s) = value {
+                } else if let StackValue::PossibleLabel(ref s) = *value {
                     let entry = labels_meta.entry(s).or_insert((vec![], vec![]));
                     entry.1.push(idx);
                 }
             }
 
-            for (key, val) in labels_meta.into_iter() {
+            for (key, val) in labels_meta {
                 if val.0.len() > 1 {
-                    return Err(StackError::MultipleLabelDefinitions{
+                    return Err(StackError::MultipleLabelDefinitions {
                         label: (*key).into(),
                         locations: val.0.clone(),
                     });
@@ -282,7 +283,7 @@ impl Machine {
 
     /// Given an input string program, this returns a stack
     /// machine or an error based on not being to create/parse it.
-    pub fn new_for_input(input: &str) -> Result<Self,StackError> {
+    pub fn new_for_input(input: &str) -> Result<Self, StackError> {
         let code = tokenize(input)?;
         Self::new(code)
     }
@@ -296,14 +297,14 @@ impl Machine {
     /// Dispatch given the result from the stack operation, which gets consumed here.
     ///
     /// Returns true or false to indicate whether the `run` loop should continue.
-    pub fn dispatch(&mut self, result: MachineOperation) -> Result<bool,StackError> {
+    pub fn dispatch(&mut self, result: MachineOperation) -> Result<bool, StackError> {
         use MachineOperation::*;
         match result {
             Call(to) => {
                 stats!(inc self calls);
                 self.return_stack.push(self.instruction_ptr);
                 self.jump(to);
-            },
+            }
             Jump(to) => {
                 stats!(inc self jumps);
                 self.jump(to);
@@ -313,13 +314,13 @@ impl Machine {
                 Some(jump_to) => {
                     stats!(inc self returns);
                     self.jump(jump_to);
-                },
-                _ => return ops!(ERR EmptyStack Return, return)
+                }
+                _ => return ops!(ERR EmptyStack Return, return),
             },
             SideEffect(_) => (),
             Stop => return Ok(false),
         }
-        return Ok(true);
+        Ok(true)
     }
 
     /// Set up the stats for this current run call.
@@ -329,7 +330,7 @@ impl Machine {
         self.stats.args = args;
     }
 
-    fn apply_args(&mut self, args: Vec<StackValue>) -> Result<bool,StackError> {
+    fn apply_args(&mut self, args: Vec<StackValue>) -> Result<bool, StackError> {
         ops!(MATCH self, push(args),)
     }
 
@@ -337,7 +338,6 @@ impl Machine {
     /// run stats if this was compiled with `features=stats`, otherwise an StackError
     /// if this failed for any reason.
     pub fn run(&mut self, args: Vec<StackValue>) -> Result<RunStats, StackError> {
-
         use StackValue::*;
 
         #[cfg(feature = "stats")]
@@ -346,7 +346,6 @@ impl Machine {
         self.apply_args(args)?;
 
         while self.instruction_ptr < self.code.len() {
-
             // we borrow _first_ because if this is a label, we
             // can just keep moving on, if it isn't a label,
             // we should clone it to be able to dispatch it
@@ -354,12 +353,12 @@ impl Machine {
             let value: StackValue = {
                 let value: &StackValue = match self.code.get(self.instruction_ptr) {
                     None => return Err(StackError::OutOfBounds),
-                    Some(ref instruction) => instruction
+                    Some(instruction) => instruction,
                 };
 
-                self.instruction_ptr = self.instruction_ptr + 1;
+                self.instruction_ptr += 1;
 
-                if let &Label(_) = value {
+                if let Label(_) = *value {
                     continue;
                 }
 
@@ -384,23 +383,20 @@ impl Machine {
                     self.stats.max_stack_heap_size = self.stack.heap_size_of_children();
                 }
             }
-
         }
 
         Ok(self.stats.clone())
     }
-
 }
 
-/// Given a string it should break this up into
-/// a list of tokens that can be parsed into StackValue.
+/// Given a `String` it should break this up into
+/// a list of tokens that can be parsed into `StackValue`.
 pub fn tokenize(input: &str) -> Result<Code, StackError> {
-
     struct ParserState {
         prev_is_escape: bool,
         ignore_til_eol: bool,
         token: String,
-        tokens: Vec<StackValue>
+        tokens: Vec<StackValue>,
     }
 
     impl ParserState {
@@ -426,11 +422,10 @@ pub fn tokenize(input: &str) -> Result<Code, StackError> {
         prev_is_escape: false,
         ignore_til_eol: false,
         tokens: Vec::new(),
-        token: String::new()
+        token: String::new(),
     };
 
     for c in input.chars() {
-
         if state.ignore_til_eol {
             if c == '\n' {
                 state.ignore_til_eol = false;
@@ -446,7 +441,7 @@ pub fn tokenize(input: &str) -> Result<Code, StackError> {
                 } else {
                     state.prev_is_escape = false;
                 }
-            },
+            }
             '\\' => {
                 if state.prev_is_escape {
                     state.prev_is_escape = false;
@@ -454,27 +449,26 @@ pub fn tokenize(input: &str) -> Result<Code, StackError> {
                 } else {
                     state.prev_is_escape = true;
                 }
-            },
+            }
             '#' => {
                 if !state.token_is_string() {
                     state.ignore_til_eol = true;
                 }
-            },
+            }
             ' ' | '\n' | '\t' | '\r' => {
                 if state.token_is_string() {
                     state.push_char(c);
                 } else {
                     state.push_token()?;
                 }
-            },
+            }
             _ => {
                 state.push_char(c);
-            },
+            }
         }
     }
     state.push_token()?;
-    return Ok(state.tokens);
-
+    Ok(state.tokens)
 }
 
 #[cfg(test)]
@@ -495,12 +489,12 @@ mod tests {
 
     #[test]
     fn test_tokenize() {
-        assert_tokens!( [ ], "# whatever man");
-        assert_tokens!( [ ], "# \"sup\" println read");
-        assert_tokens!( [ ], "      ");
-        assert_tokens!( [ Num(0) ], "0" );
-        assert_tokens!( [ Num(0), Num(1) ], "0 1" );
-        assert_tokens!( [ String("hi".to_owned()) ], "\"hi\"" );
+        assert_tokens!([], "# whatever man");
+        assert_tokens!([], "# \"sup\" println read");
+        assert_tokens!([], "      ");
+        assert_tokens!([Num(0)], "0");
+        assert_tokens!([Num(0), Num(1)], "0 1");
+        assert_tokens!([String("hi".to_owned())], "\"hi\"");
     }
 
     macro_rules! test_run {
@@ -560,7 +554,8 @@ mod tests {
         assert_eq!(1, ::std::mem::size_of::<StackOperation>());
     }
 
-    #[cfg(feature = "bench")] #[bench]
+    #[cfg(feature = "bench")]
+    #[bench]
     fn bench_fib_1(b: &mut Bencher) {
         b.iter(|| {
             let code = tokenize(include_str!("../examples/fib_no_print")).unwrap();
@@ -569,7 +564,8 @@ mod tests {
         })
     }
 
-    #[cfg(feature = "bench")] #[bench]
+    #[cfg(feature = "bench")]
+    #[bench]
     fn bench_fib_5(b: &mut Bencher) {
         b.iter(|| {
             let code = tokenize(include_str!("../examples/fib_no_print")).unwrap();
@@ -577,7 +573,8 @@ mod tests {
             machine.run(tokenize("5").unwrap()).unwrap();
         })
     }
-    #[cfg(feature = "bench")] #[bench]
+    #[cfg(feature = "bench")]
+    #[bench]
     fn bench_fib_10(b: &mut Bencher) {
         b.iter(|| {
             let code = tokenize(include_str!("../examples/fib_no_print")).unwrap();
