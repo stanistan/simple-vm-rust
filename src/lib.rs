@@ -21,6 +21,13 @@ use error::StackError;
 #[macro_use]
 pub mod stack_operations;
 
+pub enum SideEffect {
+    Exit(i32),
+    None,
+    Println(StackValue),
+    Sleep(u64),
+}
+
 /// Primitive machine operations.
 ///
 /// These are the operations that `StackOperation` is built on
@@ -30,7 +37,7 @@ pub enum MachineOperation {
     Jump(usize),
     Push(Vec<StackValue>),
     Return,
-    SideEffect(()),
+    SideEffect(SideEffect),
     Stop,
 }
 
@@ -41,7 +48,7 @@ ops! {
     Divide / (Num(a), Num(b)) push(Num(b / a)),
     ToInt cast_int (String(a)) push(Num(a.parse::<isize>().unwrap_or(0))),
     ToStr cast_str (a) push(String(format!("{}", a))),
-    Println println (a) SideEffect(println!("{}", a)),
+    Println println (a) SideEffect(::SideEffect::Println(a)),
     Equals == (a, b) push(Bool(a == b)),
     Or or (Bool(a), Bool(b)) push(Bool(a || b)),
     And and (Bool(a), Bool(b)) push(Bool(a && b)),
@@ -54,11 +61,11 @@ ops! {
     If if (f, t, Bool(cond)) push(if cond { t } else { f }),
     Jump jmp (Num(a)) Jump(a as usize),
     Duplicate dup (val) push(vec![val.clone(), val]),
-    Drop drop (_) SideEffect(()),
+    Drop drop (_) SideEffect(::SideEffect::None),
     Rotate rot (a, b, c) push(vec![b, a, c]),
     Swap swap (a, b) Push(vec![a, b]),
-    SleepMS sleep_ms (Num(a)) SideEffect(util::sleep_ms(a as u64)),
-    Exit exit (Num(exit_code)) SideEffect(util::exit(exit_code as i32)),
+    SleepMS sleep_ms (Num(a)) SideEffect(::SideEffect::Sleep(a as u64)),
+    Exit exit (Num(exit_code)) SideEffect(::SideEffect::Exit(exit_code as i32)),
     Stop stop () Stop,
     Read read () push(String(util::read_line())),
     Over over (a, b) push(vec![b.clone(), a, b]),
@@ -212,7 +219,7 @@ impl Machine {
         let code = Self::preprocess(code)?;
         let len = code.len();
         Ok(Machine {
-            code: code,
+            code,
             instruction_ptr: 0,
             return_stack: Vec::new(),
             stack: Vec::with_capacity(len),
@@ -290,7 +297,7 @@ impl Machine {
     }
 
     /// Move the instruction pointer to a given address.
-    pub fn jump(&mut self, address: usize) {
+    fn jump(&mut self, address: usize) {
         // TODO check for overflow here
         self.instruction_ptr = address;
     }
@@ -318,7 +325,10 @@ impl Machine {
                 }
                 _ => return ops!(ERR EmptyStack Return, return),
             },
-            SideEffect(_) => (),
+            SideEffect(::SideEffect::Sleep(ms)) => util::sleep_ms(ms),
+            SideEffect(::SideEffect::Exit(exit_code)) => util::exit(exit_code),
+            SideEffect(::SideEffect::Println(val)) => println!("{}", val),
+            SideEffect(::SideEffect::None) => (),
             Stop => return Ok(false),
         }
         Ok(true)
