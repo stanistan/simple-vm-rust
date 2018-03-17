@@ -1,7 +1,3 @@
-#![cfg_attr(feature = "bench", feature(test))]
-#[cfg(feature = "bench")]
-extern crate test;
-
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;
@@ -225,6 +221,13 @@ impl Machine {
             stack: Vec::with_capacity(len),
             stats: RunStats::default(),
         })
+    }
+
+    pub fn reset(&mut self) {
+        self.instruction_ptr = 0;
+        self.stats = RunStats::default();
+        self.return_stack.drain(..);
+        self.stack.drain(..);
     }
 
     /// Takes `Code` as input and finds and replaces the
@@ -488,9 +491,6 @@ mod tests {
     use super::*;
     use StackValue::*;
 
-    #[cfg(feature = "bench")]
-    use test::Bencher;
-
     macro_rules! assert_tokens {
         ([ $($token:expr),* ], $test:expr) => {{
             let expected: Vec<super::StackValue> = vec![ $($token),* ];
@@ -563,35 +563,6 @@ mod tests {
     #[test]
     fn test_stack_operations_are_tiny() {
         assert_eq!(1, ::std::mem::size_of::<StackOperation>());
-    }
-
-    #[cfg(feature = "bench")]
-    #[bench]
-    fn bench_fib_1(b: &mut Bencher) {
-        b.iter(|| {
-            let code = tokenize(include_str!("../examples/fib_no_print")).unwrap();
-            let mut machine = Machine::new(code).unwrap();
-            machine.run(tokenize("1").unwrap()).unwrap();
-        })
-    }
-
-    #[cfg(feature = "bench")]
-    #[bench]
-    fn bench_fib_5(b: &mut Bencher) {
-        b.iter(|| {
-            let code = tokenize(include_str!("../examples/fib_no_print")).unwrap();
-            let mut machine = Machine::new(code).unwrap();
-            machine.run(tokenize("5").unwrap()).unwrap();
-        })
-    }
-    #[cfg(feature = "bench")]
-    #[bench]
-    fn bench_fib_10(b: &mut Bencher) {
-        b.iter(|| {
-            let code = tokenize(include_str!("../examples/fib_no_print")).unwrap();
-            let mut machine = Machine::new(code).unwrap();
-            machine.run(tokenize("10").unwrap()).unwrap();
-        })
     }
 
 }

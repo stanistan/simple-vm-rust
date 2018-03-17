@@ -29,9 +29,6 @@ stats = [ "heapsize" ]
 # This will print out stats from jemalloc...
 mem-usage = [ ]
 
-# for bench marking which uses the nightly compiler
-bench = []
-
 [[bin]]
 name = "simple_vm"
 path = "src/bin.rs"
@@ -42,4 +39,3 @@ failure = "0.1.0"
 failure_derive = "0.1.0"
 
 heapsize = { version = "0.4.1", optional = true }
-

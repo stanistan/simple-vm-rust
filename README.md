@@ -61,7 +61,8 @@ rustup run nightly cargo run --release --features=stats,mem-usage,debug -- examp
 Benchmarking
 
 ```
-rustup run nightly cargo bench --features=bench
+cd bench
+cargo +nightly bench
 ```
 
 #### Getting Flamegraphs
