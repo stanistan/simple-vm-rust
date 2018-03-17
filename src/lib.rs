@@ -210,11 +210,12 @@ impl Machine {
     /// This runs through a `preprocess` step.
     pub fn new(code: Code) -> Result<Self, StackError> {
         let code = Self::preprocess(code)?;
+        let len = code.len();
         Ok(Machine {
             code: code,
             instruction_ptr: 0,
             return_stack: Vec::new(),
-            stack: Vec::new(),
+            stack: Vec::with_capacity(len),
             stats: RunStats::default(),
         })
     }
