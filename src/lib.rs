@@ -133,7 +133,7 @@ impl std::fmt::Display for StackValue {
             Num(n) => n.fmt(f),
             Label(ref n) => write!(f, "{}:", n),
             String(ref s) => write!(f, "\"{}\"", s),
-            Operation(_) => write!(f, "<code>"),
+            Operation(ref op) => write!(f, "<op:{:?}>", op),
             PossibleLabel(ref s) => s.fmt(f),
         }
     }

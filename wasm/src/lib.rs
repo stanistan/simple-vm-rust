@@ -25,17 +25,30 @@ macro_rules! try_js {
             },
             Err(e) => {
                 console::warn(&format!("Error: {} {:?}", stringify!($e), e));
-                return JsValue::null();
+                return Vec::new();
             }
         }
     }
 }
 
+fn to_js_value(stack_value: &StackValue) -> JsValue {
+    use StackValue::*;
+    match *stack_value {
+        Bool(b) => b.into(),
+        Num(n) => (n as u32).into(),
+        _ => (&format!("{}", stack_value)).into()
+    }
+}
+
 #[wasm_bindgen]
-pub fn run(code: &str, args: &str) -> JsValue {
+pub fn run(code: &str, args: &str) -> Vec<JsValue> {
     let code = try_js!(tokenize(code));
     let args = try_js!(tokenize(args));
     let mut machine = try_js!(Machine::new(code));
     let _stats = try_js!(machine.run(args));
-    JsValue::from_str(&format!("stack: {:#?}", machine.stack()))
+    let ret: Vec<JsValue> = machine.stack()
+        .iter()
+        .map(|v| to_js_value(v))
+        .collect();
+    ret
 }

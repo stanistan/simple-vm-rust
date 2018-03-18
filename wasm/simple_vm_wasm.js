@@ -61,6 +61,20 @@
                 }
             const passStringToWasm = passStringToWasmBrowser;
 
+            let cachedUint32Memory = null;
+            function getUint32Memory() {
+                if (cachedUint32Memory === null ||
+                    cachedUint32Memory.buffer !== wasm.memory.buffer)
+                    cachedUint32Memory = new Uint32Array(wasm.memory.buffer);
+                return cachedUint32Memory;
+            }
+        
+            function getArrayU32FromWasm(ptr, len) {
+                const mem = getUint32Memory();
+                const slice = mem.slice(ptr / 4, ptr / 4 + len);
+                return new Uint32Array(slice);
+            }
+        
             let stack = [];
         let slab = [];
             function getObject(idx) {
@@ -74,34 +88,27 @@
                 }
             }
         
-            let slab_next = 0;
-        
-            function dropRef(idx) {
-                
-
-                let obj = slab[idx >> 1];
-                
-                obj.cnt -= 1;
-                if (obj.cnt > 0)
-                    return;
-            
-
-                // If we hit 0 then free up our space in the slab
-                slab[idx >> 1] = slab_next;
-                slab_next = idx >> 1;
-            }
-        
-            function takeObject(idx) {
-                const ret = getObject(idx);
-                dropRef(idx);
-                return ret;
-            }
-        export function run(arg0, arg1) {
+                function getArrayJsValueFromWasm(ptr, len) {
+                    const mem = getUint32Memory();
+                    const slice = mem.slice(ptr / 4, ptr / 4 + len);
+                    const result = []
+                    for (ptr in slice) {
+                        result.push(getObject(ptr))
+                    }
+                    return result;
+                }
+            export function run(arg0, arg1) {
         const [ptr0, len0] = passStringToWasm(arg0);
                     const [ptr1, len1] = passStringToWasm(arg1);
                     try {
                     const ret = wasm.run(ptr0, len0, ptr1, len1);
-                    return takeObject(ret);
+                    
+                    const ptr = wasm.__wbindgen_boxed_str_ptr(ret);
+                    const len = wasm.__wbindgen_boxed_str_len(ret);
+                    const realRet = getArrayJsValueFromWasm(ptr, len);
+                    wasm.__wbindgen_boxed_str_free(ret);
+                    return realRet;
+                
                 } finally {
                     
 wasm.__wbindgen_free(ptr0, len0);
@@ -111,6 +118,8 @@ wasm.__wbindgen_free(ptr1, len1);
                 }
             }
 
+            let slab_next = 0;
+        
             function addHeapObject(obj) {
                 if (slab_next == slab.length)
                     slab.push(slab.length + 1);
@@ -133,7 +142,22 @@ wasm.__wbindgen_free(ptr1, len1);
                         val.cnt += 1;
                         return idx;
                     }
-export function __wbindgen_object_drop_ref (i) { dropRef(i); }
+
+            function dropRef(idx) {
+                
+
+                let obj = slab[idx >> 1];
+                
+                obj.cnt -= 1;
+                if (obj.cnt > 0)
+                    return;
+            
+
+                // If we hit 0 then free up our space in the slab
+                slab[idx >> 1] = slab_next;
+                slab_next = idx >> 1;
+            }
+        export function __wbindgen_object_drop_ref (i) { dropRef(i); }
 export function __wbindgen_string_new (p, l) {
                     return addHeapObject(getStringFromWasm(p, l));
                 }
@@ -182,15 +206,7 @@ export function __wbindgen_is_symbol (i) {
 export function __wbindgen_throw (ptr, len) {
                         throw new Error(getStringFromWasm(ptr, len));
                     }
-
-            let cachedUint32Memory = null;
-            function getUint32Memory() {
-                if (cachedUint32Memory === null ||
-                    cachedUint32Memory.buffer !== wasm.memory.buffer)
-                    cachedUint32Memory = new Uint32Array(wasm.memory.buffer);
-                return cachedUint32Memory;
-            }
-        export function __wbindgen_string_get (i, len_ptr) {
+export function __wbindgen_string_get (i, len_ptr) {
                     let obj = getObject(i);
                     if (typeof(obj) !== 'string')
                         return 0;
