@@ -1,0 +1,11 @@
+[package]
+name = "simple_vm-wasm"
+version = "0.1.0"
+authors = ["Stan Rozenraukh <stan@stanistan.com>"]
+
+[lib]
+crate-type = [ "cdylib" ]
+
+[dependencies]
+simple_vm = { path = "../" }
+wasm-bindgen = "0.1"

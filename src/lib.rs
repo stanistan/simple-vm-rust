@@ -230,6 +230,10 @@ impl Machine {
         self.stack.drain(..);
     }
 
+    pub fn stack(&self) -> Vec<StackValue> {
+        self.stack.clone()
+    }
+
     /// Takes `Code` as input and finds and replaces the
     /// labels with their actual positions.
     ///
