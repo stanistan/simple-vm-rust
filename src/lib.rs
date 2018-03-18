@@ -527,6 +527,20 @@ mod tests {
                 }
             )+
         };
+        (STACK $( $(#[$attr:meta])* $name:ident $v:expr, [ $code:expr ],)+) => {
+            $(
+                #[allow(unused_mut)]
+                #[test]
+                $(#[$attr])*
+                fn $name() {
+                    use Machine;
+                    let code = super::tokenize($code).unwrap();
+                    let mut machine = Machine::new(code).unwrap();
+                    machine.run(vec![]).unwrap();
+                    assert_eq!($v, machine.stack);
+                }
+            )+
+        };
     }
 
     test_run! {
@@ -563,6 +577,12 @@ mod tests {
         #[should_panic(expected = "MultipleLabelDefinitions")]
         test_multiple_label_definitions Num(0), [ "a: a:" ],
     }
+
+    test_run! { STACK
+        test_addition_dup vec![Num(2), Num(2)], [ "1 1 + dup" ],
+        test_addition_dup2 vec![Num(2), Num(2), Num(2)], [ "1 1 + dup dup" ],
+    }
+
 
     #[test]
     fn test_stack_operations_are_tiny() {
