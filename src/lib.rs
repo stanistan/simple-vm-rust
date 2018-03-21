@@ -324,7 +324,7 @@ impl Machine {
                 stats!(inc self jumps);
                 self.jump(to);
             }
-            Push(mut values) => self.stack.append(&mut values),
+            Push(values) => self.stack_push(values),
             Return => match self.return_stack.pop() {
                 Some(jump_to) => {
                     stats!(inc self returns);
@@ -348,58 +348,79 @@ impl Machine {
         self.stats.args = args;
     }
 
-    fn apply_args(&mut self, args: Vec<StackValue>) -> Result<bool, StackError> {
-        ops!(MATCH self, push(args),)
+    pub fn stack_push(&mut self, mut values: Vec<StackValue>) {
+        self.stack.append(&mut values);
+    }
+
+    /// Steps forward once in the stack machine.
+    ///
+    /// If there is no further to go given the `instruction_ptr`,
+    /// this will return `Ok(false)`, if there are further
+    /// instructions to proceed with, `Ok(true)`, otherwise
+    /// it will return an `Err(StackError)`.
+    pub fn step(&mut self) -> Result<bool, StackError> {
+
+        if self.instruction_ptr == self.code.len() {
+            return Ok(false);
+        }
+
+        // We *first* borrow the value from the `code` we're running because
+        // we might not actually need it (in case it's a label), otherwise we
+        // clone it so that we can use it in the stack operations.
+        //
+        // If we use references here, the operation would end up having a mutable
+        // reference to *this Machine* struct, which is a problem, since the `Machine`
+        // owns the code that it operates on.
+        let value: StackValue = {
+            // this is safe because we did the bounds check above.
+            let value: &StackValue = self.code.get(self.instruction_ptr).unwrap();
+            self.instruction_ptr += 1;
+            if let StackValue::Label(_) = *value {
+                return Ok(true);
+            } else {
+                value.clone()
+            }
+        };
+
+        // if it's an operation, we will dispatch it,
+        // otherwise it's a regular value, push it
+        // onto the stack.
+        if let StackValue::Operation(op) = value {
+            if !op.dispatch(self)? {
+                return Ok(false);
+            }
+        } else {
+            self.stack.push(value);
+        }
+
+        Ok(true)
     }
 
     /// Runs the machine with given arguments, and either a Result that might contain
     /// run stats if this was compiled with `features=stats`, otherwise an StackError
     /// if this failed for any reason.
     pub fn run(&mut self, args: Vec<StackValue>) -> Result<RunStats, StackError> {
-        use StackValue::*;
 
         #[cfg(feature = "stats")]
         self.setup_stats(args.clone());
 
-        self.apply_args(args)?;
+        self.stack_push(args);
 
-        while self.instruction_ptr < self.code.len() {
-            // we borrow _first_ because if this is a label, we
-            // can just keep moving on, if it isn't a label,
-            // we should clone it to be able to dispatch it
-            // given the _mutable_ stack machine.
-            let value: StackValue = {
-                let value: &StackValue = match self.code.get(self.instruction_ptr) {
-                    None => return Err(StackError::OutOfBounds),
-                    Some(instruction) => instruction,
-                };
-
-                self.instruction_ptr += 1;
-
-                if let Label(_) = *value {
-                    continue;
-                }
-
-                // we know we're going to consume this value
-                value.clone()
-            };
-
-            if let StackValue::Operation(op) = value {
-                if !op.dispatch(self)? {
-                    break;
-                }
-            } else {
-                ops!(MATCH self, push(value),)?;
-            }
-
-            #[cfg(feature = "stats")]
-            {
-                self.stats.instructions += 1;
-                let stack_size = self.stack.len();
-                if stack_size > self.stats.max_stack_size {
-                    self.stats.max_stack_size = stack_size;
-                    self.stats.max_stack_heap_size = self.stack.heap_size_of_children();
-                }
+        loop {
+            match self.step() {
+                Err(e) => return Err(e),
+                Ok(false) => break,
+                Ok(true) => {
+                    #[cfg(feature = "stats")]
+                    {
+                        self.stats.instructions += 1;
+                        let stack_size = self.stack.len();
+                        if stack_size > self.stats.max_stack_size {
+                            self.stats.max_stack_size = stack_size;
+                            self.stats.max_stack_heap_size = self.stack.heap_size_of_children();
+                        }
+                    }
+                },
             }
         }
 

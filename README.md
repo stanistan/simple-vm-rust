@@ -58,12 +58,14 @@ rustup run nightly cargo run --release --features=stats,mem-usage,debug -- examp
 
 ---
 
-Benchmarking
+#### Benchmarking
 
 ```
 cd bench
 cargo +nightly bench
 ```
+
+Use [`cargo benchcmp`](https://github.com/BurntSushi/cargo-benchcmp) for bench comparisons.
 
 #### Getting Flamegraphs
 
