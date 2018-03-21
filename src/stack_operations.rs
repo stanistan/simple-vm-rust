@@ -1,6 +1,30 @@
-/// This macro generates the `StackOperations` enum,
-/// its implementations, how its parsed, and the modules/functions
-/// for how each of the operations affects `Machine` state.
+//! This macro generates the `StackOperations` enum,
+//! its implementations, how its parsed, and the modules/functions
+//! for how each of the operations affects `Machine` state.
+//!
+//! ### Example
+//!
+//! ```norun
+//! Plus + (Num(a), Num(b)) push(Num(a + b))
+//! ```
+//!
+//! 1. Generates an enum variant called `Plus`
+//!
+//! 2. Add a `from_str` match statement for `"+"`
+//!
+//! 3. Have a pattern match of two values `Num(a)` and `Num(b)` off
+//! of the stack in the `MATCH` part of the macro expansion.
+//! Because we are using `match` to destructure this, `a` and `b`
+//! *will be bound* and destructured.
+//!
+//! 4. Use the desctrucuted binding to execute `push(Num(a + b))`,
+//! where result of `push` is actually a `MachineOperation<Vec<StackValue>>`
+//!
+//! This can then be called with
+//!
+//! ```norun
+//! machine.dispatch(operation)?;
+//! ```
 #[macro_export]
 macro_rules! ops {
 

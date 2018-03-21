@@ -17,23 +17,35 @@ use error::StackError;
 #[macro_use]
 pub mod stack_operations;
 
-pub enum SideEffect {
-    Exit(i32),
-    None,
-    Println(StackValue),
-    Sleep(u64),
-}
-
 /// Primitive machine operations.
 ///
 /// These are the operations that `StackOperation` is built on
 /// and what they return to the machine.
+///
+/// Some of these are sideeffecty.
+///
+/// TODO, make the side-effects _injectable_.
 pub enum MachineOperation {
+    /// Adds the current `instruction_ptr` to the return stack and
+    /// jumps to `usize`.
     Call(usize),
+    /// Exits the process with the exit code.
+    Exit(i32),
+    /// Jumps to that instruction.
     Jump(usize),
+    /// Does nothing
+    NA,
+    /// Pushes/appends the values to the stack.
     Push(Vec<StackValue>),
+    /// Returns to the last thing added to the return stack.
     Return,
-    SideEffect(SideEffect),
+    /// Writes a value to stdout
+    Println(StackValue),
+    /// Sleeps :shrug:
+    Sleep(u64),
+    /// Stops execution of the Machine
+    ///
+    /// TODO: merge this with exit
     Stop,
 }
 
@@ -44,7 +56,7 @@ ops! {
     Divide / (Num(a), Num(b)) push(Num(b / a)),
     ToInt cast_int (String(a)) push(Num(a.parse::<isize>().unwrap_or(0))),
     ToStr cast_str (a) push(String(format!("{}", a))),
-    Println println (a) SideEffect(::SideEffect::Println(a)),
+    Println println (a) Println(a),
     Equals == (a, b) push(Bool(a == b)),
     Or or (Bool(a), Bool(b)) push(Bool(a || b)),
     And and (Bool(a), Bool(b)) push(Bool(a && b)),
@@ -57,13 +69,13 @@ ops! {
     If if (f, t, Bool(cond)) push(if cond { t } else { f }),
     Jump jmp (Num(a)) Jump(a as usize),
     Duplicate dup (val) push(vec![val.clone(), val]),
-    Drop drop (_) SideEffect(::SideEffect::None),
+    Drop drop (_) NA,
     Rotate rot (a, b, c) push(vec![b, a, c]),
     Swap swap (a, b) Push(vec![a, b]),
-    SleepMS sleep_ms (Num(a)) SideEffect(::SideEffect::Sleep(a as u64)),
-    Exit exit (Num(exit_code)) SideEffect(::SideEffect::Exit(exit_code as i32)),
+    SleepMS sleep_ms (Num(a)) Sleep(a as u64),
+    Exit exit (Num(exit_code)) Exit(exit_code as i32),
     Stop stop () Stop,
-    Read read () push(String(util::read_line())),
+    Read read () push(String(util::read_line())), //TODO should be a machine operation
     Over over (a, b) push(vec![b.clone(), a, b]),
     Call call (Num(a)) Call(a as usize),
     Return return () Return,
@@ -332,10 +344,10 @@ impl Machine {
                 }
                 _ => return ops!(ERR EmptyStack Return, return),
             },
-            SideEffect(::SideEffect::Sleep(ms)) => util::sleep_ms(ms),
-            SideEffect(::SideEffect::Exit(exit_code)) => util::exit(exit_code),
-            SideEffect(::SideEffect::Println(val)) => println!("{}", val),
-            SideEffect(::SideEffect::None) => (),
+            Sleep(ms) => util::sleep_ms(ms),
+            Exit(exit_code) => util::exit(exit_code),
+            Println(val) => println!("{}", val),
+            NA => (),
             Stop => return Ok(false),
         }
         Ok(true)
