@@ -1,3 +1,5 @@
+fn main() { }
+/*
 #![cfg_attr(feature = "mem-usage", feature(libc))]
 extern crate simple_vm;
 
@@ -55,3 +57,4 @@ pub fn main() {
     #[cfg(feature = "mem-usage")]
     unsafe { je_stats_print(write_cb, std::ptr::null(), std::ptr::null()) };
 }
+*/
