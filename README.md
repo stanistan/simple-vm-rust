@@ -56,11 +56,6 @@ rustup run nightly cargo run --release --features=stats,mem-usage,debug -- examp
 
 ### Benchmarking
 
-```sh
-cd bench
-cargo +nightly bench
-```
-
 Use [`cargo benchcmp`](https://github.com/BurntSushi/cargo-benchcmp) for bench comparisons.
 
 #### Commits and perf numbers over time
@@ -73,6 +68,12 @@ Use [`cargo benchcmp`](https://github.com/BurntSushi/cargo-benchcmp) for bench c
 | `25f7cda330a34de18dc1a8fff68bc94c3f9b8bf5` |        `100,917` |
 | `933f94dcde1ce3bf3aa7aee72e15ccfa92d15b87` |         `84,027` |
 
+```sh
+cd bench
+git stash && cargo bench > current && git stash pop && cargo bench > new
+cargo benchcmp current new
+```
+
 ### Getting Flamegraphs
 
 The idea here is to run a profiler inside a docker container to actually get some flamegraphs
@@ -83,7 +84,13 @@ We are also using [this](https://github.com/brendangregg/FlameGraph), so that sh
 and available to you/me.
 
 ```sh
-docker build -t simple-vm-perf . -f perf/Dockerfile
+prof/run.sh
+```
+
+Or, with more details:
+
+```sh
+docker build -t simple-vm-perf . -f prof/Dockerfile
 ```
 
 The Dockerfile will install `perf` so it can be un inside of the container and builds
