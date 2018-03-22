@@ -69,41 +69,33 @@ Use [`cargo benchcmp`](https://github.com/BurntSushi/cargo-benchcmp) for bench c
 
 #### Getting Flamegraphs
 
-(Using [this](https://github.com/brendangregg/FlameGraph))
+The idea here is to run a profiler inside a docker container to actually get some flamegraphs
+out, since running them on MacOS is [pretty unweildy](http://carol-nichols.com/2015/12/09/rust-profiling-on-osx-cpu-time/),
+and just straight up might not work at all, but it is [usable elsewhere](https://blog.anp.lol/rust/2016/07/24/profiling-rust-perf-flamegraph/).
 
-The `Cargo.toml` has `debug=true` in the `[profile.release]` section so that symbols
-don't get mangled and we can do perf tracing.
-
-```sh
-cargo build --release
-# trace for doing running `examples/fib 10`
-sudo dtrace \
-    -c 'target/release/simple_vm examples/fib 10' \
-    -o stack.out \
-    -n 'profile-10001 { @[ustack()] = count() }'
-stackcollapse.pl stack.out | flamegraph.pl > graph.svg
-open graph.svg
-```
-
-If trying to get a trace for a single benchmark:
+We are also using [this](https://github.com/brendangregg/FlameGraph), so that should be somewhere
+and available to you/me.
 
 ```sh
-# deleting this to simplify finding the right binary.
-rm -rf target/release/
-cargo clean
-rustup run nightly cargo bench --no-run
+docker build -t simple-vm-perf . -f perf/Dockerfile
 ```
 
-One of the files matching `target/release/simple_vm-*` will end up being the correct executable.
+The Dockerfile will install `perf` so it can be un inside of the container and builds
+out the `simple_vm` project with the `bench/` sub-project.
+
+The first build will be a little expensive since it's going to be downloading all
+of the dependencies, etc, but the Dockerfile is structured in a way to minimize
+re-downloading/compiling everything (unless you're adding or removing dependencies).
+
+- [ ] Use multistage builds
+
+Ok, so once we have that built out we can run it!
 
 ```sh
-sudo dtrace \
-    -c 'target/release/simple_vm-$HASH --bench $TEST' \
-    -o stack.out \
-    -n 'profile-10001 { @[ustack()] = count() }'
-
-stackcollapse.pl stack.out | flamegraph.pl > graph.svg
-open graph.svg
+docker run --privileged -it -v "`pwd`/prof":/prof simple-vm-perf /prof/run.sh fib_10
+cat prof/data/perf.script | stackcollapse-perf.pl | flamegraph.pl > bench.svg
 ```
+
+(That assumes that Flamegraph things are in your `$PATH`)
 
 ![bench.svg](./bench.svg)

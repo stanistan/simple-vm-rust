@@ -6,3 +6,6 @@ publish = false
 
 [dependencies]
 simple_vm = { path = "../" }
+
+[profile.release]
+debug = true
