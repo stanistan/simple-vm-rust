@@ -65,13 +65,13 @@ Use [`cargo benchcmp`](https://github.com/BurntSushi/cargo-benchcmp) for bench c
 
 #### Commits and perf numbers over time
 
-| Commit                                   | `fib_10` ns/iter |
-| ---------------------------------------- | ---------------: |
-| bbd24ad4494710598c8a20e28635763c184ce72c |          180,305 |
-| a7436cd672065204e540ec5233126740f20b30a6 |          130,614 |
-| 9eddfd3f54e838faf4eea49ed62bbc3fcb3c49bb |          129,146 |
-| 25f7cda330a34de18dc1a8fff68bc94c3f9b8bf5 |          100,917 |
-| 933f94dcde1ce3bf3aa7aee72e15ccfa92d15b87 |           84,027 |
+| Commit                                     | `fib_10` ns/iter |
+| :----------------------------------------- | ---------------: |
+| `bbd24ad4494710598c8a20e28635763c184ce72c` |        `180,305` |
+| `a7436cd672065204e540ec5233126740f20b30a6` |        `130,614` |
+| `9eddfd3f54e838faf4eea49ed62bbc3fcb3c49bb` |        `129,146` |
+| `25f7cda330a34de18dc1a8fff68bc94c3f9b8bf5` |        `100,917` |
+| `933f94dcde1ce3bf3aa7aee72e15ccfa92d15b87` |         `84,027` |
 
 ### Getting Flamegraphs
 
