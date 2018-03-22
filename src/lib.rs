@@ -35,8 +35,10 @@ pub enum MachineOperation {
     Jump(usize),
     /// Does nothing
     NA,
-    /// Pushes/appends the values to the stack.
-    Push(Vec<StackValue>),
+    /// Appends many values to the stack.
+    PushMany(Vec<StackValue>),
+    /// Appends one value to the stack.
+    Push(StackValue),
     /// Returns to the last thing added to the return stack.
     Return,
     /// Writes a value to stdout
@@ -50,45 +52,35 @@ pub enum MachineOperation {
 }
 
 ops! {
-    Plus + (Num(a), Num(b)) push(Num(a + b)),
-    Minus - (Num(a), Num(b)) push(Num(b - a)),
-    Multiply * (Num(a), Num(b)) push(Num(a * b)),
-    Divide / (Num(a), Num(b)) push(Num(b / a)),
-    ToInt cast_int (String(a)) push(Num(a.parse::<isize>().unwrap_or(0))),
-    ToStr cast_str (a) push(String(format!("{}", a))),
+    Plus + (Num(a), Num(b)) Push(Num(a + b)),
+    Minus - (Num(a), Num(b)) Push(Num(b - a)),
+    Multiply * (Num(a), Num(b)) Push(Num(a * b)),
+    Divide / (Num(a), Num(b)) Push(Num(b / a)),
+    ToInt cast_int (String(a)) Push(Num(a.parse::<isize>().unwrap_or(0))),
+    ToStr cast_str (a) Push(String(format!("{}", a))),
     Println println (a) Println(a),
-    Equals == (a, b) push(Bool(a == b)),
-    Or or (Bool(a), Bool(b)) push(Bool(a || b)),
-    And and (Bool(a), Bool(b)) push(Bool(a && b)),
-    Not not (Bool(a)) push(Bool(!a)),
-    LessThan < (Num(a), Num(b)) push(Bool(b < a)),
-    LessThanOrEqualTo <= (Num(a), Num(b)) push(Bool(b <= a)),
-    GreaterHan > (Num(a), Num(b)) push(Bool(b > a)),
-    GreaterHanOrEqualto >= (Num(a), Num(b)) push(Bool(b >= a)),
-    Mod % (Num(a), Num(b)) push(Num(b % a)),
-    If if (f, t, Bool(cond)) push(if cond { t } else { f }),
+    Equals == (a, b) Push(Bool(a == b)),
+    Or or (Bool(a), Bool(b)) Push(Bool(a || b)),
+    And and (Bool(a), Bool(b)) Push(Bool(a && b)),
+    Not not (Bool(a)) Push(Bool(!a)),
+    LessThan < (Num(a), Num(b)) Push(Bool(b < a)),
+    LessThanOrEqualTo <= (Num(a), Num(b)) Push(Bool(b <= a)),
+    GreaterHan > (Num(a), Num(b)) Push(Bool(b > a)),
+    GreaterHanOrEqualto >= (Num(a), Num(b)) Push(Bool(b >= a)),
+    Mod % (Num(a), Num(b)) Push(Num(b % a)),
+    If if (f, t, Bool(cond)) Push(if cond { t } else { f }),
     Jump jmp (Num(a)) Jump(a as usize),
-    Duplicate dup (val) push(vec![val.clone(), val]),
+    Duplicate dup (val) PushMany(vec![val.clone(), val]),
     Drop drop (_) NA,
-    Rotate rot (a, b, c) push(vec![b, a, c]),
-    Swap swap (a, b) Push(vec![a, b]),
+    Rotate rot (a, b, c) PushMany(vec![b, a, c]),
+    Swap swap (a, b) PushMany(vec![a, b]),
     SleepMS sleep_ms (Num(a)) Sleep(a as u64),
     Exit exit (Num(exit_code)) Exit(exit_code as i32),
     Stop stop () Stop,
-    Read read () push(String(util::read_line())), //TODO should be a machine operation
-    Over over (a, b) push(vec![b.clone(), a, b]),
+    Read read () Push(String(util::read_line())), //TODO should be a machine operation
+    Over over (a, b) PushMany(vec![b.clone(), a, b]),
     Call call (Num(a)) Call(a as usize),
     Return return () Return,
-}
-
-impl Into<Vec<StackValue>> for StackValue {
-    fn into(self) -> Vec<StackValue> {
-        vec![self]
-    }
-}
-
-fn push<T: Into<Vec<StackValue>>>(val: T) -> MachineOperation {
-    MachineOperation::Push(val.into())
 }
 
 #[cfg(feature = "stats")]
@@ -336,7 +328,8 @@ impl Machine {
                 stats!(inc self jumps);
                 self.jump(to);
             }
-            Push(values) => self.stack_push(values),
+            Push(val) => self.stack.push(val),
+            PushMany(values) => self.stack_push(values),
             Return => match self.return_stack.pop() {
                 Some(jump_to) => {
                     stats!(inc self returns);
