@@ -39,6 +39,10 @@ pub enum MachineOperation {
     PushMany(Vec<StackValue>),
     /// Appends one value to the stack.
     Push(StackValue),
+    /// Appends two values to the stack.
+    PushTwo(StackValue, StackValue),
+    /// Appends three values to the stack.
+    PushThree(StackValue, StackValue, StackValue),
     /// Returns to the last thing added to the return stack.
     Return,
     /// Writes a value to stdout
@@ -70,15 +74,15 @@ ops! {
     Mod % (Num(a), Num(b)) Push(Num(b % a)),
     If if (f, t, Bool(cond)) Push(if cond { t } else { f }),
     Jump jmp (Num(a)) Jump(a as usize),
-    Duplicate dup (val) PushMany(vec![val.clone(), val]),
+    Duplicate dup (val) PushTwo(val.clone(), val),
     Drop drop (_) NA,
-    Rotate rot (a, b, c) PushMany(vec![b, a, c]),
-    Swap swap (a, b) PushMany(vec![a, b]),
+    Rotate rot (a, b, c) PushThree(b, a, c),
+    Swap swap (a, b) PushTwo(a, b),
     SleepMS sleep_ms (Num(a)) Sleep(a as u64),
     Exit exit (Num(exit_code)) Exit(exit_code as i32),
     Stop stop () Stop,
     Read read () Push(String(util::read_line())), //TODO should be a machine operation
-    Over over (a, b) PushMany(vec![b.clone(), a, b]),
+    Over over (a, b) PushThree(b.clone(), a, b),
     Call call (Num(a)) Call(a as usize),
     Return return () Return,
 }
@@ -329,6 +333,15 @@ impl Machine {
                 self.jump(to);
             }
             Push(val) => self.stack.push(val),
+            PushTwo(v1, v2) => {
+                self.stack.push(v1);
+                self.stack.push(v2);
+            },
+            PushThree(v1, v2, v3) => {
+                self.stack.push(v1);
+                self.stack.push(v2);
+                self.stack.push(v3);
+            },
             PushMany(values) => self.stack_push(values),
             Return => match self.return_stack.pop() {
                 Some(jump_to) => {
