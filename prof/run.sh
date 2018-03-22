@@ -16,6 +16,7 @@ FILENAME=`find target/release/simple_vm_bench-* -exec file {} \; | grep -i elf |
 # run it for a particular benchmark
 perf record -g $FILENAME --bench "$@"
 perf script | grep -v unknown > $VOLUME_DATA_DIR/perf.script
+perf report > $VOLUME_DATA_DIR/perf.report
 
 # COOL, we did it!
 #

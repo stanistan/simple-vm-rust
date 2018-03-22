@@ -1,6 +1,6 @@
 <?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" width="1200" height="262" onload="init(evt)" viewBox="0 0 1200 262" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg version="1.1" width="1200" height="358" onload="init(evt)" viewBox="0 0 1200 358" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
 <!-- NOTES:  -->
 <defs >
@@ -329,422 +329,490 @@
 	}
 ]]>
 </script>
-<rect x="0.0" y="0" width="1200.0" height="262.0" fill="url(#background)"  />
+<rect x="0.0" y="0" width="1200.0" height="358.0" fill="url(#background)"  />
 <text text-anchor="middle" x="600.00" y="24" font-size="17" font-family="Verdana" fill="rgb(0,0,0)"  >Flame Graph</text>
-<text text-anchor="" x="10.00" y="245" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="details" > </text>
+<text text-anchor="" x="10.00" y="341" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="details" > </text>
 <text text-anchor="" x="10.00" y="24" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="unzoom" onclick="unzoom()" style="opacity:0.0;cursor:pointer" >Reset Zoom</text>
 <text text-anchor="" x="1090.00" y="24" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="search" onmouseover="searchover()" onmouseout="searchout()" onclick="search_prompt()" style="opacity:0.1;cursor:pointer" >Search</text>
-<text text-anchor="" x="1090.00" y="245" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="matched" > </text>
+<text text-anchor="" x="1090.00" y="341" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="matched" > </text>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::dispatch (19 samples, 1.83%)</title><rect x="1025.3" y="101" width="21.6" height="15.0" fill="rgb(248,53,9)" rx="2" ry="2" />
-<text text-anchor="" x="1028.32" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >s..</text>
+<title>simple_vm::impl_stack_operation::Plus::execute (25 samples, 2.22%)</title><rect x="1044.1" y="213" width="26.2" height="15.0" fill="rgb(217,172,16)" rx="2" ry="2" />
+<text text-anchor="" x="1047.07" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >s..</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>std::io::Write::write_all (1 samples, 0.10%)</title><rect x="21.4" y="37" width="1.1" height="15.0" fill="rgb(211,91,13)" rx="2" ry="2" />
-<text text-anchor="" x="24.36" y="47.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (3 samples, 0.27%)</title><rect x="873.0" y="181" width="3.1" height="15.0" fill="rgb(224,32,42)" rx="2" ry="2" />
+<text text-anchor="" x="875.95" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_alloc (1 samples, 0.10%)</title><rect x="1066.2" y="101" width="1.1" height="15.0" fill="rgb(210,66,36)" rx="2" ry="2" />
-<text text-anchor="" x="1069.21" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::impl_stack_operation::Or::execute (48 samples, 4.27%)</title><rect x="993.7" y="213" width="50.4" height="15.0" fill="rgb(214,137,43)" rx="2" ry="2" />
+<text text-anchor="" x="996.68" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simpl..</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Or::execute (5 samples, 0.48%)</title><rect x="1179.8" y="133" width="5.7" height="15.0" fill="rgb(243,122,48)" rx="2" ry="2" />
-<text text-anchor="" x="1182.78" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_dealloc (1 samples, 0.09%)</title><rect x="960.1" y="181" width="1.0" height="15.0" fill="rgb(234,18,52)" rx="2" ry="2" />
+<text text-anchor="" x="963.09" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::dispatch (11 samples, 1.06%)</title><rect x="973.1" y="101" width="12.5" height="15.0" fill="rgb(215,126,37)" rx="2" ry="2" />
-<text text-anchor="" x="976.08" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_dealloc (1 samples, 0.09%)</title><rect x="1069.3" y="181" width="1.0" height="15.0" fill="rgb(242,99,40)" rx="2" ry="2" />
+<text text-anchor="" x="1072.27" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>sdallocx (4 samples, 0.38%)</title><rect x="703.9" y="101" width="4.6" height="15.0" fill="rgb(224,4,32)" rx="2" ry="2" />
-<text text-anchor="" x="706.92" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::impl_stack_operation::Not::execute (31 samples, 2.76%)</title><rect x="961.1" y="213" width="32.6" height="15.0" fill="rgb(229,31,15)" rx="2" ry="2" />
+<text text-anchor="" x="964.14" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >si..</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::run (789 samples, 75.94%)</title><rect x="290.5" y="165" width="896.1" height="15.0" fill="rgb(238,165,20)" rx="2" ry="2" />
-<text text-anchor="" x="293.52" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm::Machine::run</text>
+<title>simple_vm::impl_stack_operation::Call::execute (5 samples, 0.44%)</title><rect x="1154.3" y="229" width="5.3" height="15.0" fill="rgb(253,5,47)" rx="2" ry="2" />
+<text text-anchor="" x="1157.31" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::StackOperation::dispatch (551 samples, 53.03%)</title><rect x="542.6" y="133" width="625.8" height="15.0" fill="rgb(249,91,5)" rx="2" ry="2" />
-<text text-anchor="" x="545.65" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm::StackOperation::dispatch</text>
+<title>std::rt::lang_start::_$u7b$$u7b$closure$u7d$$u7d$::h07e6d8c81f5c1fba (4 samples, 0.36%)</title><rect x="19.4" y="229" width="4.2" height="15.0" fill="rgb(240,179,39)" rx="2" ry="2" />
+<text text-anchor="" x="22.45" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Duplicate::execute (85 samples, 8.18%)</title><rect x="651.7" y="117" width="96.5" height="15.0" fill="rgb(222,102,40)" rx="2" ry="2" />
-<text text-anchor="" x="654.67" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm::..</text>
+<title>term::terminfo::parser::compiled::parse (1 samples, 0.09%)</title><rect x="20.5" y="85" width="1.0" height="15.0" fill="rgb(210,48,26)" rx="2" ry="2" />
+<text text-anchor="" x="23.50" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_dealloc (2 samples, 0.19%)</title><rect x="872.0" y="101" width="2.3" height="15.0" fill="rgb(225,96,41)" rx="2" ry="2" />
-<text text-anchor="" x="875.00" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>std::rt::lang_start_internal (4 samples, 0.36%)</title><rect x="19.4" y="261" width="4.2" height="15.0" fill="rgb(228,226,19)" rx="2" ry="2" />
+<text text-anchor="" x="22.45" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>all (1,039 samples, 100%)</title><rect x="10.0" y="213" width="1180.0" height="15.0" fill="rgb(238,134,19)" rx="2" ry="2" />
-<text text-anchor="" x="13.00" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_dealloc (1 samples, 0.09%)</title><rect x="894.0" y="197" width="1.0" height="15.0" fill="rgb(227,202,22)" rx="2" ry="2" />
+<text text-anchor="" x="896.95" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>test::test_main_static (2 samples, 0.19%)</title><rect x="20.2" y="117" width="2.3" height="15.0" fill="rgb(236,81,8)" rx="2" ry="2" />
-<text text-anchor="" x="23.22" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>mallocx (3 samples, 0.27%)</title><rect x="1024.1" y="197" width="3.2" height="15.0" fill="rgb(236,96,48)" rx="2" ry="2" />
+<text text-anchor="" x="1027.13" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_dealloc (4 samples, 0.38%)</title><rect x="789.1" y="101" width="4.5" height="15.0" fill="rgb(223,147,45)" rx="2" ry="2" />
-<text text-anchor="" x="792.10" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::Machine::dispatch (26 samples, 2.31%)</title><rect x="636.7" y="213" width="27.3" height="15.0" fill="rgb(233,220,42)" rx="2" ry="2" />
+<text text-anchor="" x="639.74" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >s..</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__vdso_clock_gettime (1 samples, 0.10%)</title><rect x="622.1" y="117" width="1.2" height="15.0" fill="rgb(251,167,0)" rx="2" ry="2" />
-<text text-anchor="" x="625.15" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (1 samples, 0.09%)</title><rect x="959.0" y="181" width="1.1" height="15.0" fill="rgb(219,63,53)" rx="2" ry="2" />
+<text text-anchor="" x="962.04" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>mallocx (1 samples, 0.10%)</title><rect x="968.5" y="101" width="1.2" height="15.0" fill="rgb(219,200,15)" rx="2" ry="2" />
-<text text-anchor="" x="971.54" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__vdso_clock_gettime (1 samples, 0.09%)</title><rect x="563.3" y="229" width="1.0" height="15.0" fill="rgb(222,0,35)" rx="2" ry="2" />
+<text text-anchor="" x="566.26" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>sdallocx (3 samples, 0.29%)</title><rect x="969.7" y="101" width="3.4" height="15.0" fill="rgb(205,56,8)" rx="2" ry="2" />
-<text text-anchor="" x="972.67" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>alloc::allocator::Layout::repeat (1 samples, 0.09%)</title><rect x="22.6" y="69" width="1.0" height="15.0" fill="rgb(232,196,38)" rx="2" ry="2" />
+<text text-anchor="" x="25.60" y="79.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Not::execute (31 samples, 2.98%)</title><rect x="950.4" y="117" width="35.2" height="15.0" fill="rgb(235,20,44)" rx="2" ry="2" />
-<text text-anchor="" x="953.37" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >si..</text>
+<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (2 samples, 0.18%)</title><rect x="990.5" y="181" width="2.1" height="15.0" fill="rgb(215,41,37)" rx="2" ry="2" />
+<text text-anchor="" x="993.53" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;alloc::vec::Vec&lt;T&gt; as core::ops::deref::Deref&gt;::deref (1 samples, 0.10%)</title><rect x="613.1" y="117" width="1.1" height="15.0" fill="rgb(243,13,46)" rx="2" ry="2" />
-<text text-anchor="" x="616.06" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>mallocx (2 samples, 0.18%)</title><rect x="1120.7" y="197" width="2.1" height="15.0" fill="rgb(243,45,34)" rx="2" ry="2" />
+<text text-anchor="" x="1123.71" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rust_alloc (4 samples, 0.38%)</title><rect x="617.6" y="117" width="4.5" height="15.0" fill="rgb(210,56,15)" rx="2" ry="2" />
-<text text-anchor="" x="620.60" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_alloc (5 samples, 0.44%)</title><rect x="969.5" y="197" width="5.3" height="15.0" fill="rgb(227,184,12)" rx="2" ry="2" />
+<text text-anchor="" x="972.54" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Swap::execute (76 samples, 7.31%)</title><rect x="1082.1" y="117" width="86.3" height="15.0" fill="rgb(220,60,4)" rx="2" ry="2" />
-<text text-anchor="" x="1085.11" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm:..</text>
+<title>simple_vm::tokenize (1 samples, 0.09%)</title><rect x="22.6" y="101" width="1.0" height="15.0" fill="rgb(236,42,25)" rx="2" ry="2" />
+<text text-anchor="" x="25.60" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Duplicate::execute (2 samples, 0.19%)</title><rect x="1170.7" y="133" width="2.3" height="15.0" fill="rgb(214,155,46)" rx="2" ry="2" />
-<text text-anchor="" x="1173.69" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::impl_stack_operation::Plus::execute (1 samples, 0.09%)</title><rect x="1177.4" y="229" width="1.1" height="15.0" fill="rgb(220,149,51)" rx="2" ry="2" />
+<text text-anchor="" x="1180.40" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>sdallocx (139 samples, 13.38%)</title><rect x="129.2" y="181" width="157.9" height="15.0" fill="rgb(213,152,27)" rx="2" ry="2" />
-<text text-anchor="" x="132.25" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >sdallocx</text>
+<title>__rde_alloc (3 samples, 0.27%)</title><rect x="890.8" y="197" width="3.2" height="15.0" fill="rgb(216,164,22)" rx="2" ry="2" />
+<text text-anchor="" x="893.80" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__xstat64 (1 samples, 0.10%)</title><rect x="20.2" y="85" width="1.2" height="15.0" fill="rgb(231,223,46)" rx="2" ry="2" />
-<text text-anchor="" x="23.22" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_dealloc (1 samples, 0.09%)</title><rect x="1056.7" y="197" width="1.0" height="15.0" fill="rgb(236,115,23)" rx="2" ry="2" />
+<text text-anchor="" x="1059.67" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>test::run_tests_console (1 samples, 0.10%)</title><rect x="21.4" y="85" width="1.1" height="15.0" fill="rgb(213,54,51)" rx="2" ry="2" />
-<text text-anchor="" x="24.36" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (1 samples, 0.09%)</title><rect x="1017.8" y="197" width="1.1" height="15.0" fill="rgb(245,181,3)" rx="2" ry="2" />
+<text text-anchor="" x="1020.83" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::If::execute (37 samples, 3.56%)</title><rect x="850.4" y="117" width="42.0" height="15.0" fill="rgb(241,162,30)" rx="2" ry="2" />
-<text text-anchor="" x="853.42" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >sim..</text>
+<title>__rde_dealloc (1 samples, 0.09%)</title><rect x="992.6" y="181" width="1.1" height="15.0" fill="rgb(232,171,42)" rx="2" ry="2" />
+<text text-anchor="" x="995.63" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>mallocx (94 samples, 9.05%)</title><rect x="22.5" y="181" width="106.7" height="15.0" fill="rgb(205,144,18)" rx="2" ry="2" />
-<text text-anchor="" x="25.49" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >mallocx</text>
+<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (3 samples, 0.27%)</title><rect x="1151.2" y="181" width="3.1" height="15.0" fill="rgb(224,120,6)" rx="2" ry="2" />
+<text text-anchor="" x="1154.16" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_dealloc (3 samples, 0.29%)</title><rect x="965.1" y="101" width="3.4" height="15.0" fill="rgb(250,114,44)" rx="2" ry="2" />
-<text text-anchor="" x="968.13" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::Machine::dispatch (16 samples, 1.42%)</title><rect x="976.9" y="197" width="16.8" height="15.0" fill="rgb(228,176,26)" rx="2" ry="2" />
+<text text-anchor="" x="979.89" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::dispatch (12 samples, 1.15%)</title><rect x="936.7" y="101" width="13.7" height="15.0" fill="rgb(230,43,3)" rx="2" ry="2" />
-<text text-anchor="" x="939.74" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm_bench (1,124 samples, 100.00%)</title><rect x="10.0" y="293" width="1180.0" height="15.0" fill="rgb(221,16,47)" rx="2" ry="2" />
+<text text-anchor="" x="13.00" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm_bench</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_alloc (3 samples, 0.29%)</title><rect x="614.2" y="117" width="3.4" height="15.0" fill="rgb(209,190,18)" rx="2" ry="2" />
-<text text-anchor="" x="617.20" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>test::ns_iter_inner (868 samples, 77.22%)</title><rect x="278.8" y="277" width="911.2" height="15.0" fill="rgb(223,202,49)" rx="2" ry="2" />
+<text text-anchor="" x="281.75" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >test::ns_iter_inner</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::dispatch (9 samples, 0.87%)</title><rect x="623.3" y="117" width="10.2" height="15.0" fill="rgb(245,17,46)" rx="2" ry="2" />
-<text text-anchor="" x="626.28" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>readlink (1 samples, 0.09%)</title><rect x="139.1" y="277" width="1.1" height="15.0" fill="rgb(206,104,34)" rx="2" ry="2" />
+<text text-anchor="" x="142.13" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>mallocx (4 samples, 0.38%)</title><rect x="874.3" y="101" width="4.5" height="15.0" fill="rgb(251,166,39)" rx="2" ry="2" />
-<text text-anchor="" x="877.27" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>core::ptr::drop_in_place (1 samples, 0.09%)</title><rect x="19.4" y="165" width="1.1" height="15.0" fill="rgb(238,139,34)" rx="2" ry="2" />
+<text text-anchor="" x="22.45" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::dispatch (9 samples, 0.87%)</title><rect x="641.5" y="101" width="10.2" height="15.0" fill="rgb(251,154,7)" rx="2" ry="2" />
-<text text-anchor="" x="644.45" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (1 samples, 0.09%)</title><rect x="968.5" y="197" width="1.0" height="15.0" fill="rgb(254,100,43)" rx="2" ry="2" />
+<text text-anchor="" x="971.49" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::dispatch (28 samples, 2.69%)</title><rect x="1136.6" y="101" width="31.8" height="15.0" fill="rgb(207,47,20)" rx="2" ry="2" />
-<text text-anchor="" x="1139.62" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >si..</text>
+<title>simple_vm::Machine::dispatch (45 samples, 4.00%)</title><rect x="754.3" y="197" width="47.3" height="15.0" fill="rgb(222,126,36)" rx="2" ry="2" />
+<text text-anchor="" x="757.32" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simp..</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>sdallocx (2 samples, 0.19%)</title><rect x="934.5" y="101" width="2.2" height="15.0" fill="rgb(252,207,52)" rx="2" ry="2" />
-<text text-anchor="" x="937.47" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::StackOperation::dispatch (1 samples, 0.09%)</title><rect x="1182.7" y="245" width="1.0" height="15.0" fill="rgb(249,21,30)" rx="2" ry="2" />
+<text text-anchor="" x="1185.65" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_dealloc (1 samples, 0.10%)</title><rect x="849.3" y="85" width="1.1" height="15.0" fill="rgb(207,145,36)" rx="2" ry="2" />
-<text text-anchor="" x="852.29" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::impl_stack_operation::Not::execute (2 samples, 0.18%)</title><rect x="1171.1" y="229" width="2.1" height="15.0" fill="rgb(247,185,35)" rx="2" ry="2" />
+<text text-anchor="" x="1174.10" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_dealloc (3 samples, 0.29%)</title><rect x="692.6" y="101" width="3.4" height="15.0" fill="rgb(212,227,48)" rx="2" ry="2" />
-<text text-anchor="" x="695.56" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::Machine::dispatch (14 samples, 1.25%)</title><rect x="677.7" y="197" width="14.7" height="15.0" fill="rgb(236,29,3)" rx="2" ry="2" />
+<text text-anchor="" x="680.69" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_alloc (4 samples, 0.38%)</title><rect x="784.6" y="101" width="4.5" height="15.0" fill="rgb(252,159,48)" rx="2" ry="2" />
-<text text-anchor="" x="787.55" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>_IO_file_read (1 samples, 0.09%)</title><rect x="15.2" y="277" width="1.1" height="15.0" fill="rgb(219,113,50)" rx="2" ry="2" />
+<text text-anchor="" x="18.25" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Equals::execute (90 samples, 8.66%)</title><rect x="748.2" y="117" width="102.2" height="15.0" fill="rgb(232,46,33)" rx="2" ry="2" />
-<text text-anchor="" x="751.21" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm::i..</text>
+<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (3 samples, 0.27%)</title><rect x="912.8" y="181" width="3.2" height="15.0" fill="rgb(230,140,12)" rx="2" ry="2" />
+<text text-anchor="" x="915.85" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Or::execute (54 samples, 5.20%)</title><rect x="985.6" y="117" width="61.3" height="15.0" fill="rgb(243,9,42)" rx="2" ry="2" />
-<text text-anchor="" x="988.57" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple..</text>
+<title>main (4 samples, 0.36%)</title><rect x="19.4" y="277" width="4.2" height="15.0" fill="rgb(243,139,34)" rx="2" ry="2" />
+<text text-anchor="" x="22.45" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (1 samples, 0.10%)</title><rect x="984.4" y="85" width="1.2" height="15.0" fill="rgb(246,55,31)" rx="2" ry="2" />
-<text text-anchor="" x="987.44" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;std::collections::hash::map::HashMap&lt;K, V, S&gt;&gt;::insert (1 samples, 0.09%)</title><rect x="20.5" y="53" width="1.0" height="15.0" fill="rgb(214,184,28)" rx="2" ry="2" />
+<text text-anchor="" x="23.50" y="63.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_alloc (8 samples, 0.77%)</title><rect x="862.9" y="101" width="9.1" height="15.0" fill="rgb(230,100,36)" rx="2" ry="2" />
-<text text-anchor="" x="865.92" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rust_maybe_catch_panic (4 samples, 0.36%)</title><rect x="19.4" y="245" width="4.2" height="15.0" fill="rgb(252,54,54)" rx="2" ry="2" />
+<text text-anchor="" x="22.45" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Call::execute (16 samples, 1.54%)</title><rect x="633.5" y="117" width="18.2" height="15.0" fill="rgb(237,144,12)" rx="2" ry="2" />
-<text text-anchor="" x="636.50" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::impl_stack_operation::If::execute (38 samples, 3.38%)</title><rect x="876.1" y="213" width="39.9" height="15.0" fill="rgb(205,152,53)" rx="2" ry="2" />
+<text text-anchor="" x="879.10" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >sim..</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>sdallocx (2 samples, 0.19%)</title><rect x="1023.1" y="101" width="2.2" height="15.0" fill="rgb(243,119,37)" rx="2" ry="2" />
-<text text-anchor="" x="1026.05" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_dealloc (1 samples, 0.09%)</title><rect x="1116.5" y="197" width="1.1" height="15.0" fill="rgb(230,46,15)" rx="2" ry="2" />
+<text text-anchor="" x="1119.51" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (3 samples, 0.29%)</title><rect x="889.0" y="85" width="3.4" height="15.0" fill="rgb(217,198,52)" rx="2" ry="2" />
-<text text-anchor="" x="892.04" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_alloc (4 samples, 0.36%)</title><rect x="1018.9" y="197" width="4.2" height="15.0" fill="rgb(206,24,40)" rx="2" ry="2" />
+<text text-anchor="" x="1021.88" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;alloc::vec::Vec&lt;T&gt; as core::ops::deref::Deref&gt;::deref (1 samples, 0.10%)</title><rect x="1017.4" y="101" width="1.1" height="15.0" fill="rgb(224,86,5)" rx="2" ry="2" />
-<text text-anchor="" x="1020.37" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>sdallocx (132 samples, 11.74%)</title><rect x="140.2" y="277" width="138.6" height="15.0" fill="rgb(253,32,17)" rx="2" ry="2" />
+<text text-anchor="" x="143.18" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >sdallocx</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>sdallocx (1 samples, 0.10%)</title><rect x="1069.6" y="101" width="1.2" height="15.0" fill="rgb(243,59,24)" rx="2" ry="2" />
-<text text-anchor="" x="1072.62" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_alloc (8 samples, 0.71%)</title><rect x="829.9" y="197" width="8.4" height="15.0" fill="rgb(212,169,24)" rx="2" ry="2" />
+<text text-anchor="" x="832.91" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>std::rt::lang_start_internal (2 samples, 0.19%)</title><rect x="20.2" y="165" width="2.3" height="15.0" fill="rgb(247,19,46)" rx="2" ry="2" />
-<text text-anchor="" x="23.22" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (3 samples, 0.27%)</title><rect x="1040.9" y="181" width="3.2" height="15.0" fill="rgb(254,144,11)" rx="2" ry="2" />
+<text text-anchor="" x="1043.93" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>sdallocx (3 samples, 0.29%)</title><rect x="800.5" y="101" width="3.4" height="15.0" fill="rgb(227,146,51)" rx="2" ry="2" />
-<text text-anchor="" x="803.45" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_alloc (2 samples, 0.18%)</title><rect x="1054.6" y="197" width="2.1" height="15.0" fill="rgb(225,26,26)" rx="2" ry="2" />
+<text text-anchor="" x="1057.57" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Minus::execute (4 samples, 0.38%)</title><rect x="1174.1" y="133" width="4.5" height="15.0" fill="rgb(214,46,50)" rx="2" ry="2" />
-<text text-anchor="" x="1177.10" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::Machine::dispatch (11 samples, 0.98%)</title><rect x="1058.8" y="197" width="11.5" height="15.0" fill="rgb(252,66,6)" rx="2" ry="2" />
+<text text-anchor="" x="1061.77" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__vdso_clock_gettime (1 samples, 0.10%)</title><rect x="317.8" y="149" width="1.1" height="15.0" fill="rgb(231,67,52)" rx="2" ry="2" />
-<text text-anchor="" x="320.78" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>mallocx (2 samples, 0.18%)</title><rect x="896.0" y="197" width="2.1" height="15.0" fill="rgb(217,28,34)" rx="2" ry="2" />
+<text text-anchor="" x="899.05" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>mallocx (4 samples, 0.38%)</title><rect x="699.4" y="101" width="4.5" height="15.0" fill="rgb(238,150,45)" rx="2" ry="2" />
-<text text-anchor="" x="702.37" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::impl_stack_operation::Swap::execute (4 samples, 0.36%)</title><rect x="1178.5" y="229" width="4.2" height="15.0" fill="rgb(247,142,11)" rx="2" ry="2" />
+<text text-anchor="" x="1181.45" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_alloc (2 samples, 0.19%)</title><rect x="926.5" y="101" width="2.3" height="15.0" fill="rgb(220,132,34)" rx="2" ry="2" />
-<text text-anchor="" x="929.52" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::impl_stack_operation::Minus::execute (43 samples, 3.83%)</title><rect x="916.0" y="213" width="45.1" height="15.0" fill="rgb(248,152,7)" rx="2" ry="2" />
+<text text-anchor="" x="919.00" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simp..</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>mallocx (6 samples, 0.58%)</title><rect x="1127.5" y="101" width="6.9" height="15.0" fill="rgb(234,123,16)" rx="2" ry="2" />
-<text text-anchor="" x="1130.54" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__vdso_clock_gettime (3 samples, 0.27%)</title><rect x="16.3" y="277" width="3.1" height="15.0" fill="rgb(240,171,42)" rx="2" ry="2" />
+<text text-anchor="" x="19.30" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>mallocx (1 samples, 0.10%)</title><rect x="1068.5" y="101" width="1.1" height="15.0" fill="rgb(250,196,33)" rx="2" ry="2" />
-<text text-anchor="" x="1071.48" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>term::stdout (1 samples, 0.09%)</title><rect x="20.5" y="165" width="1.0" height="15.0" fill="rgb(229,79,35)" rx="2" ry="2" />
+<text text-anchor="" x="23.50" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rust_maybe_catch_panic (2 samples, 0.19%)</title><rect x="20.2" y="149" width="2.3" height="15.0" fill="rgb(242,158,48)" rx="2" ry="2" />
-<text text-anchor="" x="23.22" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>mallocx (4 samples, 0.36%)</title><rect x="841.5" y="197" width="4.2" height="15.0" fill="rgb(232,151,27)" rx="2" ry="2" />
+<text text-anchor="" x="844.46" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::dispatch (41 samples, 3.95%)</title><rect x="803.9" y="101" width="46.5" height="15.0" fill="rgb(218,167,47)" rx="2" ry="2" />
-<text text-anchor="" x="806.86" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simp..</text>
+<title>__rde_dealloc (2 samples, 0.18%)</title><rect x="799.5" y="181" width="2.1" height="15.0" fill="rgb(230,110,40)" rx="2" ry="2" />
+<text text-anchor="" x="802.47" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (4 samples, 0.38%)</title><rect x="945.8" y="85" width="4.6" height="15.0" fill="rgb(239,76,31)" rx="2" ry="2" />
-<text text-anchor="" x="948.82" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;alloc::vec::Vec&lt;T&gt; as core::ops::deref::Deref&gt;::deref (3 samples, 0.27%)</title><rect x="622.0" y="213" width="3.2" height="15.0" fill="rgb(213,218,1)" rx="2" ry="2" />
+<text text-anchor="" x="625.05" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::dispatch (1 samples, 0.10%)</title><rect x="541.5" y="133" width="1.1" height="15.0" fill="rgb(242,214,31)" rx="2" ry="2" />
-<text text-anchor="" x="544.51" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_alloc (5 samples, 0.44%)</title><rect x="736.5" y="197" width="5.2" height="15.0" fill="rgb(237,2,34)" rx="2" ry="2" />
+<text text-anchor="" x="739.48" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::dispatch (11 samples, 1.06%)</title><rect x="880.0" y="101" width="12.4" height="15.0" fill="rgb(245,209,48)" rx="2" ry="2" />
-<text text-anchor="" x="882.95" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;std::collections::hash::map::DefaultHasher as core::hash::Hasher&gt;::write (1 samples, 0.09%)</title><rect x="20.5" y="37" width="1.0" height="15.0" fill="rgb(245,217,34)" rx="2" ry="2" />
+<text text-anchor="" x="23.50" y="47.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::step (764 samples, 73.53%)</title><rect x="318.9" y="149" width="867.7" height="15.0" fill="rgb(235,223,28)" rx="2" ry="2" />
-<text text-anchor="" x="321.91" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm::Machine::step</text>
+<title>__rde_dealloc (3 samples, 0.27%)</title><rect x="949.6" y="197" width="3.1" height="15.0" fill="rgb(214,196,1)" rx="2" ry="2" />
+<text text-anchor="" x="952.59" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;core::option::Option&lt;&amp;a T&gt;&gt;::cloned (1 samples, 0.10%)</title><rect x="14.5" y="181" width="1.2" height="15.0" fill="rgb(251,19,19)" rx="2" ry="2" />
-<text text-anchor="" x="17.54" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_dealloc (5 samples, 0.44%)</title><rect x="741.7" y="197" width="5.3" height="15.0" fill="rgb(251,117,20)" rx="2" ry="2" />
+<text text-anchor="" x="744.73" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::dispatch (35 samples, 3.37%)</title><rect x="708.5" y="101" width="39.7" height="15.0" fill="rgb(249,63,3)" rx="2" ry="2" />
-<text text-anchor="" x="711.46" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >sim..</text>
+<title>simple_vm::impl_stack_operation::Equals::execute (4 samples, 0.36%)</title><rect x="1164.8" y="229" width="4.2" height="15.0" fill="rgb(231,111,8)" rx="2" ry="2" />
+<text text-anchor="" x="1167.80" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Minus::execute (51 samples, 4.91%)</title><rect x="892.4" y="117" width="58.0" height="15.0" fill="rgb(205,199,25)" rx="2" ry="2" />
-<text text-anchor="" x="895.44" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple..</text>
+<title>mallocx (1 samples, 0.09%)</title><rect x="952.7" y="197" width="1.1" height="15.0" fill="rgb(229,143,6)" rx="2" ry="2" />
+<text text-anchor="" x="955.74" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>test::run_tests_console::_$u7b$$u7b$closure$u7d$$u7d$::h7f8caf6f108c2636 (1 samples, 0.10%)</title><rect x="21.4" y="69" width="1.1" height="15.0" fill="rgb(238,90,26)" rx="2" ry="2" />
-<text text-anchor="" x="24.36" y="79.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::StackOperation::dispatch (561 samples, 49.91%)</title><rect x="565.4" y="229" width="588.9" height="15.0" fill="rgb(229,45,39)" rx="2" ry="2" />
+<text text-anchor="" x="568.36" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm::StackOperation::dispatch</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rust_dealloc (3 samples, 0.29%)</title><rect x="793.6" y="101" width="3.4" height="15.0" fill="rgb(205,59,7)" rx="2" ry="2" />
-<text text-anchor="" x="796.64" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::impl_stack_operation::Duplicate::execute (5 samples, 0.44%)</title><rect x="1159.6" y="229" width="5.2" height="15.0" fill="rgb(211,150,21)" rx="2" ry="2" />
+<text text-anchor="" x="1162.56" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Plus::execute (31 samples, 2.98%)</title><rect x="1046.9" y="117" width="35.2" height="15.0" fill="rgb(207,174,39)" rx="2" ry="2" />
-<text text-anchor="" x="1049.90" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >si..</text>
+<title>__rust_maybe_catch_panic (1 samples, 0.09%)</title><rect x="22.6" y="133" width="1.0" height="15.0" fill="rgb(213,194,47)" rx="2" ry="2" />
+<text text-anchor="" x="25.60" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>main (2 samples, 0.19%)</title><rect x="20.2" y="181" width="2.3" height="15.0" fill="rgb(213,141,46)" rx="2" ry="2" />
-<text text-anchor="" x="23.22" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__vdso_clock_gettime (2 samples, 0.18%)</title><rect x="634.6" y="213" width="2.1" height="15.0" fill="rgb(207,110,25)" rx="2" ry="2" />
+<text text-anchor="" x="637.64" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::dispatch (10 samples, 0.96%)</title><rect x="1070.8" y="101" width="11.3" height="15.0" fill="rgb(240,100,20)" rx="2" ry="2" />
-<text text-anchor="" x="1073.75" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rust_dealloc (1 samples, 0.09%)</title><rect x="895.0" y="197" width="1.0" height="15.0" fill="rgb(210,123,8)" rx="2" ry="2" />
+<text text-anchor="" x="898.00" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Call::execute (2 samples, 0.19%)</title><rect x="1168.4" y="133" width="2.3" height="15.0" fill="rgb(215,71,22)" rx="2" ry="2" />
-<text text-anchor="" x="1171.42" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm_bench::bench_fib_10 (1 samples, 0.09%)</title><rect x="22.6" y="117" width="1.0" height="15.0" fill="rgb(221,88,5)" rx="2" ry="2" />
+<text text-anchor="" x="25.60" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::Machine::step (3 samples, 0.29%)</title><rect x="1186.6" y="165" width="3.4" height="15.0" fill="rgb(233,40,3)" rx="2" ry="2" />
-<text text-anchor="" x="1189.59" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>test::test_main (4 samples, 0.36%)</title><rect x="19.4" y="197" width="4.2" height="15.0" fill="rgb(213,141,39)" rx="2" ry="2" />
+<text text-anchor="" x="22.45" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_alloc (2 samples, 0.19%)</title><rect x="1018.5" y="101" width="2.3" height="15.0" fill="rgb(252,16,22)" rx="2" ry="2" />
-<text text-anchor="" x="1021.51" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>sdallocx (1 samples, 0.09%)</title><rect x="975.8" y="197" width="1.1" height="15.0" fill="rgb(243,62,34)" rx="2" ry="2" />
+<text text-anchor="" x="978.84" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Plus::execute (1 samples, 0.10%)</title><rect x="1185.5" y="133" width="1.1" height="15.0" fill="rgb(230,103,53)" rx="2" ry="2" />
-<text text-anchor="" x="1188.46" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::Machine::step (836 samples, 74.38%)</title><rect x="305.0" y="245" width="877.7" height="15.0" fill="rgb(221,29,50)" rx="2" ry="2" />
+<text text-anchor="" x="308.00" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm::Machine::step</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_alloc (7 samples, 0.67%)</title><rect x="684.6" y="101" width="8.0" height="15.0" fill="rgb(207,130,50)" rx="2" ry="2" />
-<text text-anchor="" x="687.61" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;alloc::vec::Vec&lt;T&gt; as core::clone::Clone&gt;::clone (1 samples, 0.09%)</title><rect x="14.2" y="277" width="1.0" height="15.0" fill="rgb(214,91,17)" rx="2" ry="2" />
+<text text-anchor="" x="17.20" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>sdallocx (1 samples, 0.10%)</title><rect x="878.8" y="101" width="1.2" height="15.0" fill="rgb(227,29,35)" rx="2" ry="2" />
-<text text-anchor="" x="881.82" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;term::terminfo::TerminfoTerminal&lt;T&gt;&gt;::new (1 samples, 0.09%)</title><rect x="20.5" y="149" width="1.0" height="15.0" fill="rgb(250,193,46)" rx="2" ry="2" />
+<text text-anchor="" x="23.50" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Equals::execute (1 samples, 0.10%)</title><rect x="1173.0" y="133" width="1.1" height="15.0" fill="rgb(222,110,42)" rx="2" ry="2" />
-<text text-anchor="" x="1175.96" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__vdso_clock_gettime (2 samples, 0.18%)</title><rect x="302.9" y="245" width="2.1" height="15.0" fill="rgb(235,219,35)" rx="2" ry="2" />
+<text text-anchor="" x="305.90" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>mallocx (3 samples, 0.29%)</title><rect x="797.0" y="101" width="3.5" height="15.0" fill="rgb(242,208,8)" rx="2" ry="2" />
-<text text-anchor="" x="800.05" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rust_alloc (1 samples, 0.09%)</title><rect x="633.6" y="213" width="1.0" height="15.0" fill="rgb(240,89,50)" rx="2" ry="2" />
+<text text-anchor="" x="636.59" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_dealloc (1 samples, 0.10%)</title><rect x="1167.3" y="85" width="1.1" height="15.0" fill="rgb(225,83,7)" rx="2" ry="2" />
-<text text-anchor="" x="1170.29" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>term::terminfo::TermInfo::from_name (1 samples, 0.09%)</title><rect x="20.5" y="117" width="1.0" height="15.0" fill="rgb(254,207,18)" rx="2" ry="2" />
+<text text-anchor="" x="23.50" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>test::test_main (2 samples, 0.19%)</title><rect x="20.2" y="101" width="2.3" height="15.0" fill="rgb(225,214,8)" rx="2" ry="2" />
-<text text-anchor="" x="23.22" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_alloc (8 samples, 0.71%)</title><rect x="625.2" y="213" width="8.4" height="15.0" fill="rgb(242,41,23)" rx="2" ry="2" />
+<text text-anchor="" x="628.20" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;test::formatters::pretty::PrettyFormatter&lt;T&gt; as test::formatters::OutputFormatter&gt;::write_result (1 samples, 0.10%)</title><rect x="21.4" y="53" width="1.1" height="15.0" fill="rgb(253,188,27)" rx="2" ry="2" />
-<text text-anchor="" x="24.36" y="63.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::tokenize::ParserState::push_char (1 samples, 0.09%)</title><rect x="22.6" y="85" width="1.0" height="15.0" fill="rgb(251,84,47)" rx="2" ry="2" />
+<text text-anchor="" x="25.60" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rust_dealloc (3 samples, 0.29%)</title><rect x="696.0" y="101" width="3.4" height="15.0" fill="rgb(221,226,20)" rx="2" ry="2" />
-<text text-anchor="" x="698.97" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (2 samples, 0.18%)</title><rect x="734.4" y="197" width="2.1" height="15.0" fill="rgb(220,117,43)" rx="2" ry="2" />
+<text text-anchor="" x="737.38" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>test::ns_iter_inner (794 samples, 76.42%)</title><rect x="288.2" y="181" width="901.8" height="15.0" fill="rgb(216,44,3)" rx="2" ry="2" />
-<text text-anchor="" x="291.25" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >test::ns_iter_inner</text>
+<title>&lt;std::collections::hash::map::HashMap&lt;K, V, S&gt; as core::iter::traits::FromIterator&lt; (1 samples, 0.09%)</title><rect x="20.5" y="69" width="1.0" height="15.0" fill="rgb(238,186,14)" rx="2" ry="2" />
+<text text-anchor="" x="23.50" y="79.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_alloc (1 samples, 0.10%)</title><rect x="964.0" y="101" width="1.1" height="15.0" fill="rgb(215,176,52)" rx="2" ry="2" />
-<text text-anchor="" x="966.99" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>term::terminfo::TermInfo::from_env (1 samples, 0.09%)</title><rect x="20.5" y="133" width="1.0" height="15.0" fill="rgb(224,190,35)" rx="2" ry="2" />
+<text text-anchor="" x="23.50" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>std::rt::lang_start_internal (1 samples, 0.10%)</title><rect x="287.1" y="181" width="1.1" height="15.0" fill="rgb(210,32,44)" rx="2" ry="2" />
-<text text-anchor="" x="290.11" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>sdallocx (1 samples, 0.09%)</title><rect x="19.4" y="149" width="1.1" height="15.0" fill="rgb(213,28,13)" rx="2" ry="2" />
+<text text-anchor="" x="22.45" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (1 samples, 0.10%)</title><rect x="1166.2" y="85" width="1.1" height="15.0" fill="rgb(234,15,30)" rx="2" ry="2" />
-<text text-anchor="" x="1169.15" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>test::run_test (2 samples, 0.18%)</title><rect x="21.5" y="165" width="2.1" height="15.0" fill="rgb(253,8,22)" rx="2" ry="2" />
+<text text-anchor="" x="24.55" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_dealloc (3 samples, 0.29%)</title><rect x="1120.7" y="101" width="3.4" height="15.0" fill="rgb(219,137,20)" rx="2" ry="2" />
-<text text-anchor="" x="1123.72" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::impl_stack_operation::If::execute (1 samples, 0.09%)</title><rect x="1169.0" y="229" width="1.1" height="15.0" fill="rgb(247,199,5)" rx="2" ry="2" />
+<text text-anchor="" x="1172.00" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rust_dealloc (3 samples, 0.29%)</title><rect x="1124.1" y="101" width="3.4" height="15.0" fill="rgb(237,221,22)" rx="2" ry="2" />
-<text text-anchor="" x="1127.13" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_alloc (3 samples, 0.27%)</title><rect x="946.4" y="197" width="3.2" height="15.0" fill="rgb(222,38,36)" rx="2" ry="2" />
+<text text-anchor="" x="949.44" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_dealloc (1 samples, 0.10%)</title><rect x="1067.3" y="101" width="1.2" height="15.0" fill="rgb(211,74,7)" rx="2" ry="2" />
-<text text-anchor="" x="1070.34" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::Machine::dispatch (30 samples, 2.67%)</title><rect x="1122.8" y="197" width="31.5" height="15.0" fill="rgb(206,212,16)" rx="2" ry="2" />
+<text text-anchor="" x="1125.81" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >si..</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_alloc (7 samples, 0.67%)</title><rect x="1112.8" y="101" width="7.9" height="15.0" fill="rgb(211,128,2)" rx="2" ry="2" />
-<text text-anchor="" x="1115.77" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>mallocx (4 samples, 0.36%)</title><rect x="747.0" y="197" width="4.2" height="15.0" fill="rgb(211,146,18)" rx="2" ry="2" />
+<text text-anchor="" x="749.98" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>sdallocx (2 samples, 0.19%)</title><rect x="1134.4" y="101" width="2.2" height="15.0" fill="rgb(242,105,16)" rx="2" ry="2" />
-<text text-anchor="" x="1137.35" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::Machine::dispatch (1 samples, 0.09%)</title><rect x="564.3" y="229" width="1.1" height="15.0" fill="rgb(245,0,42)" rx="2" ry="2" />
+<text text-anchor="" x="567.31" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>std::rt::lang_start::_$u7b$$u7b$closure$u7d$$u7d$::h07e6d8c81f5c1fba (2 samples, 0.19%)</title><rect x="20.2" y="133" width="2.3" height="15.0" fill="rgb(236,208,12)" rx="2" ry="2" />
-<text text-anchor="" x="23.22" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rde_dealloc (1 samples, 0.09%)</title><rect x="838.3" y="197" width="1.1" height="15.0" fill="rgb(253,27,53)" rx="2" ry="2" />
+<text text-anchor="" x="841.31" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__pthread_initialize_minimal (1 samples, 0.10%)</title><rect x="15.7" y="181" width="1.1" height="15.0" fill="rgb(209,200,26)" rx="2" ry="2" />
-<text text-anchor="" x="18.68" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>mallocx (110 samples, 9.79%)</title><rect x="23.6" y="277" width="115.5" height="15.0" fill="rgb(243,149,2)" rx="2" ry="2" />
+<text text-anchor="" x="26.65" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >mallocx</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm_bench (1,039 samples, 100.00%)</title><rect x="10.0" y="197" width="1180.0" height="15.0" fill="rgb(244,188,54)" rx="2" ry="2" />
-<text text-anchor="" x="13.00" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm_bench</text>
+<title>term::terminfo::TermInfo::_from_path (1 samples, 0.09%)</title><rect x="20.5" y="101" width="1.0" height="15.0" fill="rgb(229,118,7)" rx="2" ry="2" />
+<text text-anchor="" x="23.50" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rust_dealloc (1 samples, 0.10%)</title><rect x="1021.9" y="101" width="1.2" height="15.0" fill="rgb(213,212,53)" rx="2" ry="2" />
-<text text-anchor="" x="1024.92" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::Machine::dispatch (7 samples, 0.62%)</title><rect x="953.8" y="197" width="7.3" height="15.0" fill="rgb(239,8,13)" rx="2" ry="2" />
+<text text-anchor="" x="956.79" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (1 samples, 0.10%)</title><rect x="1045.8" y="85" width="1.1" height="15.0" fill="rgb(220,77,0)" rx="2" ry="2" />
-<text text-anchor="" x="1048.77" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::impl_stack_operation::Call::execute (27 samples, 2.40%)</title><rect x="664.0" y="213" width="28.4" height="15.0" fill="rgb(232,212,34)" rx="2" ry="2" />
+<text text-anchor="" x="667.04" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >si..</text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__vdso_clock_gettime (3 samples, 0.29%)</title><rect x="16.8" y="181" width="3.4" height="15.0" fill="rgb(219,120,8)" rx="2" ry="2" />
-<text text-anchor="" x="19.81" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rust_dealloc (3 samples, 0.27%)</title><rect x="1117.6" y="197" width="3.1" height="15.0" fill="rgb(211,193,39)" rx="2" ry="2" />
+<text text-anchor="" x="1120.56" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (3 samples, 0.29%)</title><rect x="744.8" y="85" width="3.4" height="15.0" fill="rgb(219,48,40)" rx="2" ry="2" />
-<text text-anchor="" x="747.80" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (2 samples, 0.18%)</title><rect x="1109.2" y="197" width="2.1" height="15.0" fill="rgb(251,73,9)" rx="2" ry="2" />
+<text text-anchor="" x="1112.16" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>mallocx (2 samples, 0.19%)</title><rect x="932.2" y="101" width="2.3" height="15.0" fill="rgb(225,167,27)" rx="2" ry="2" />
-<text text-anchor="" x="935.19" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (2 samples, 0.18%)</title><rect x="1067.2" y="181" width="2.1" height="15.0" fill="rgb(209,21,5)" rx="2" ry="2" />
+<text text-anchor="" x="1070.17" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (1 samples, 0.10%)</title><rect x="1065.1" y="101" width="1.1" height="15.0" fill="rgb(231,149,10)" rx="2" ry="2" />
-<text text-anchor="" x="1068.07" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>test::test_main_static (4 samples, 0.36%)</title><rect x="19.4" y="213" width="4.2" height="15.0" fill="rgb(237,135,36)" rx="2" ry="2" />
+<text text-anchor="" x="22.45" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>simple_vm::impl_stack_operation::Not::execute (1 samples, 0.10%)</title><rect x="1178.6" y="133" width="1.2" height="15.0" fill="rgb(221,96,44)" rx="2" ry="2" />
-<text text-anchor="" x="1181.64" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>test::run_tests_console (4 samples, 0.36%)</title><rect x="19.4" y="181" width="4.2" height="15.0" fill="rgb(205,220,43)" rx="2" ry="2" />
+<text text-anchor="" x="22.45" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (7 samples, 0.67%)</title><rect x="841.3" y="85" width="8.0" height="15.0" fill="rgb(252,211,49)" rx="2" ry="2" />
-<text text-anchor="" x="844.34" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::impl_stack_operation::Minus::execute (1 samples, 0.09%)</title><rect x="1170.1" y="229" width="1.0" height="15.0" fill="rgb(227,197,44)" rx="2" ry="2" />
+<text text-anchor="" x="1173.05" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_dealloc (3 samples, 0.29%)</title><rect x="928.8" y="101" width="3.4" height="15.0" fill="rgb(231,49,26)" rx="2" ry="2" />
-<text text-anchor="" x="931.79" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>simple_vm::impl_stack_operation::Or::execute (4 samples, 0.36%)</title><rect x="1173.2" y="229" width="4.2" height="15.0" fill="rgb(244,207,40)" rx="2" ry="2" />
+<text text-anchor="" x="1176.20" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (3 samples, 0.29%)</title><rect x="1078.7" y="85" width="3.4" height="15.0" fill="rgb(208,62,49)" rx="2" ry="2" />
-<text text-anchor="" x="1081.70" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>__rust_dealloc (2 samples, 0.18%)</title><rect x="839.4" y="197" width="2.1" height="15.0" fill="rgb(231,199,42)" rx="2" ry="2" />
+<text text-anchor="" x="842.36" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
 </g>
 <g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
-<title>__rde_dealloc (1 samples, 0.10%)</title><rect x="1020.8" y="101" width="1.1" height="15.0" fill="rgb(244,216,19)" rx="2" ry="2" />
-<text text-anchor="" x="1023.78" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+<title>&lt;alloc::vec::Vec&lt;T&gt; as core::ops::deref::Deref&gt;::deref (1 samples, 0.09%)</title><rect x="945.4" y="197" width="1.0" height="15.0" fill="rgb(216,77,18)" rx="2" ry="2" />
+<text text-anchor="" x="948.39" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>simple_vm::impl_stack_operation::Swap::execute (80 samples, 7.12%)</title><rect x="1070.3" y="213" width="84.0" height="15.0" fill="rgb(239,2,20)" rx="2" ry="2" />
+<text text-anchor="" x="1073.32" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>mallocx (1 samples, 0.09%)</title><rect x="1057.7" y="197" width="1.1" height="15.0" fill="rgb(230,24,32)" rx="2" ry="2" />
+<text text-anchor="" x="1060.72" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>simple_vm::Machine::dispatch (28 samples, 2.49%)</title><rect x="846.7" y="197" width="29.4" height="15.0" fill="rgb(213,60,20)" rx="2" ry="2" />
+<text text-anchor="" x="849.71" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >si..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>simple_vm::impl_stack_operation::Duplicate::execute (104 samples, 9.25%)</title><rect x="692.4" y="213" width="109.2" height="15.0" fill="rgb(207,193,54)" rx="2" ry="2" />
+<text text-anchor="" x="695.38" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm::im..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>test::bench::benchmark (2 samples, 0.18%)</title><rect x="21.5" y="149" width="2.1" height="15.0" fill="rgb(243,225,48)" rx="2" ry="2" />
+<text text-anchor="" x="24.55" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>simple_vm::Machine::dispatch (17 samples, 1.51%)</title><rect x="898.1" y="197" width="17.9" height="15.0" fill="rgb(212,157,43)" rx="2" ry="2" />
+<text text-anchor="" x="901.15" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>sdallocx (1 samples, 0.09%)</title><rect x="845.7" y="197" width="1.0" height="15.0" fill="rgb(242,169,26)" rx="2" ry="2" />
+<text text-anchor="" x="848.66" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>sdallocx (3 samples, 0.27%)</title><rect x="751.2" y="197" width="3.1" height="15.0" fill="rgb(206,93,39)" rx="2" ry="2" />
+<text text-anchor="" x="754.17" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>mallocx (1 samples, 0.09%)</title><rect x="974.8" y="197" width="1.0" height="15.0" fill="rgb(248,120,20)" rx="2" ry="2" />
+<text text-anchor="" x="977.79" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__rde_alloc (5 samples, 0.44%)</title><rect x="1111.3" y="197" width="5.2" height="15.0" fill="rgb(235,21,17)" rx="2" ry="2" />
+<text text-anchor="" x="1114.26" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>all (1,124 samples, 100%)</title><rect x="10.0" y="309" width="1180.0" height="15.0" fill="rgb(226,97,44)" rx="2" ry="2" />
+<text text-anchor="" x="13.00" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>simple_vm::Machine::dispatch (16 samples, 1.42%)</title><rect x="1027.3" y="197" width="16.8" height="15.0" fill="rgb(209,100,9)" rx="2" ry="2" />
+<text text-anchor="" x="1030.28" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__rust_dealloc (1 samples, 0.09%)</title><rect x="1023.1" y="197" width="1.0" height="15.0" fill="rgb(222,49,50)" rx="2" ry="2" />
+<text text-anchor="" x="1026.08" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>&lt;alloc::raw_vec::RawVec&lt;T, A&gt;&gt;::reserve (4 samples, 0.36%)</title><rect x="795.3" y="181" width="4.2" height="15.0" fill="rgb(206,46,11)" rx="2" ry="2" />
+<text text-anchor="" x="798.27" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>simple_vm::Machine::run (862 samples, 76.69%)</title><rect x="278.8" y="261" width="904.9" height="15.0" fill="rgb(243,153,32)" rx="2" ry="2" />
+<text text-anchor="" x="281.75" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_vm::Machine::run</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>simple_vm::Machine::step (6 samples, 0.53%)</title><rect x="1183.7" y="261" width="6.3" height="15.0" fill="rgb(237,50,24)" rx="2" ry="2" />
+<text text-anchor="" x="1186.70" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  ></text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>simple_vm::impl_stack_operation::Equals::execute (71 samples, 6.32%)</title><rect x="801.6" y="213" width="74.5" height="15.0" fill="rgb(252,200,48)" rx="2" ry="2" />
+<text text-anchor="" x="804.57" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"  >simple_v..</text>
 </g>
 </svg>
