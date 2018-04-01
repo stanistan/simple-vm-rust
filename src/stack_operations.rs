@@ -126,7 +126,7 @@ macro_rules! ops {
                 use super::*;
                 /// Generated method by the `ops!` macro.
                 #[allow(unreachable_patterns, unused_imports, unreachable_code)]
-                pub fn execute(machine: &mut Machine) -> Result<bool, StackError> {
+                pub fn execute(machine: &mut Machine) -> Result<StepResult, StackError> {
                     use StackValue::*;
                     use MachineOperation::*;
                     ops!(MATCH machine, $e, $($type),*)
@@ -137,7 +137,7 @@ macro_rules! ops {
         impl StackOperation {
             /// Dispatch a generated `StackOperation` variant to its relevant
             /// `impl_stack_operation::$OperationVariant::execute()` function.
-            pub fn dispatch(&self, machine: &mut Machine) -> Result<bool,StackError> {
+            pub fn dispatch(&self, machine: &mut Machine) -> Result<StepResult, StackError> {
                 match *self {
                     $(StackOperation::$t => impl_stack_operation::$t::execute(machine),)+
                 }

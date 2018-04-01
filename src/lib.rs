@@ -29,8 +29,6 @@ pub enum MachineOperation {
     /// Adds the current `instruction_ptr` to the return stack and
     /// jumps to `usize`.
     Call(usize),
-    /// Exits the process with the exit code.
-    Exit(i32),
     /// Jumps to that instruction.
     Jump(usize),
     /// Does nothing
@@ -49,10 +47,8 @@ pub enum MachineOperation {
     Println(StackValue),
     /// Sleeps :shrug:
     Sleep(u64),
-    /// Stops execution of the Machine
-    ///
-    /// TODO: merge this with exit
-    Stop,
+    /// Stops execution of the Machine with an exit code.
+    Stop(i32),
 }
 
 ops! {
@@ -79,8 +75,8 @@ ops! {
     Rotate rot (a, b, c) PushThree(b, a, c),
     Swap swap (a, b) PushTwo(a, b),
     SleepMS sleep_ms (Num(a)) Sleep(a as u64),
-    Exit exit (Num(exit_code)) Exit(exit_code as i32),
-    Stop stop () Stop,
+    Exit exit (Num(exit_code)) Stop(exit_code as i32),
+    Stop stop () Stop(0),
     Read read () Push(String(util::read_line())), //TODO should be a machine operation
     Over over (a, b) PushThree(b.clone(), a, b),
     Call call (Num(a)) Call(a as usize),
@@ -103,10 +99,6 @@ impl HeapSizeOf for StackValue {
 }
 
 mod util {
-
-    pub fn exit(exit_code: i32) {
-        ::std::process::exit(exit_code)
-    }
 
     pub fn sleep_ms(duration: u64) {
         use std::thread;
@@ -198,6 +190,17 @@ pub struct RunStats {
 pub struct RunStats;
 
 pub type Code = Vec<StackValue>;
+
+pub struct RunResult {
+    pub exit_code: i32,
+    pub stats: RunStats
+}
+
+#[derive(Copy, Clone)]
+pub enum StepResult {
+    Continue,
+    Stop(i32),
+}
 
 #[derive(Debug)]
 pub struct Machine {
@@ -320,7 +323,7 @@ impl Machine {
     /// Dispatch given the result from the stack operation, which gets consumed here.
     ///
     /// Returns true or false to indicate whether the `run` loop should continue.
-    pub fn dispatch(&mut self, result: MachineOperation) -> Result<bool, StackError> {
+    pub fn dispatch(&mut self, result: MachineOperation) -> Result<StepResult, StackError> {
         use MachineOperation::*;
         match result {
             Call(to) => {
@@ -351,12 +354,11 @@ impl Machine {
                 _ => return ops!(ERR EmptyStack Return, return),
             },
             Sleep(ms) => util::sleep_ms(ms),
-            Exit(exit_code) => util::exit(exit_code),
             Println(val) => println!("{}", val),
             NA => (),
-            Stop => return Ok(false),
+            Stop(code) => return Ok(StepResult::Stop(code)),
         }
-        Ok(true)
+        Ok(StepResult::Continue)
     }
 
     /// Set up the stats for this current run call.
@@ -376,10 +378,10 @@ impl Machine {
     /// this will return `Ok(false)`, if there are further
     /// instructions to proceed with, `Ok(true)`, otherwise
     /// it will return an `Err(StackError)`.
-    pub fn step(&mut self) -> Result<bool, StackError> {
+    pub fn step(&mut self) -> Result<StepResult, StackError> {
 
         if self.instruction_ptr == self.code.len() {
-            return Ok(false);
+            return Ok(StepResult::Stop(0));
         }
 
         // We *first* borrow the value from the `code` we're running because
@@ -394,7 +396,7 @@ impl Machine {
             let value: &StackValue = self.code.get(self.instruction_ptr).unwrap();
             self.instruction_ptr += 1;
             if let StackValue::Label(_) = *value {
-                return Ok(true);
+                return Ok(StepResult::Continue);
             } else {
                 value.clone()
             }
@@ -404,20 +406,17 @@ impl Machine {
         // otherwise it's a regular value, push it
         // onto the stack.
         if let StackValue::Operation(op) = value {
-            if !op.dispatch(self)? {
-                return Ok(false);
-            }
+            return op.dispatch(self);
         } else {
             self.stack.push(value);
+            return Ok(StepResult::Continue);
         }
-
-        Ok(true)
     }
 
     /// Runs the machine with given arguments, and either a Result that might contain
     /// run stats if this was compiled with `features=stats`, otherwise an StackError
     /// if this failed for any reason.
-    pub fn run(&mut self, args: Vec<StackValue>) -> Result<RunStats, StackError> {
+    pub fn run(&mut self, args: Vec<StackValue>) -> Result<RunResult, StackError> {
 
         #[cfg(feature = "stats")]
         self.setup_stats(args.clone());
@@ -426,9 +425,16 @@ impl Machine {
 
         loop {
             match self.step() {
-                Err(e) => return Err(e),
-                Ok(false) => break,
-                Ok(true) => {
+                Err(e) => {
+                    return Err(e)
+                },
+                Ok(StepResult::Stop(exit_code)) => {
+                    return Ok(RunResult {
+                        exit_code,
+                        stats: self.stats.clone()
+                    })
+                },
+                Ok(StepResult::Continue) => {
                     #[cfg(feature = "stats")]
                     {
                         self.stats.instructions += 1;
@@ -441,8 +447,6 @@ impl Machine {
                 },
             }
         }
-
-        Ok(self.stats.clone())
     }
 }
 
@@ -551,8 +555,16 @@ mod tests {
         assert_tokens!([String("hi".to_owned())], "\"hi\"");
     }
 
+    fn full_stack(stack: Vec<StackValue>) -> Vec<StackValue> {
+        stack
+    }
+
+    fn first_stack(stack: Vec<StackValue>) -> StackValue {
+        stack[0].clone()
+    }
+
     macro_rules! test_run {
-        ($( $(#[$attr:meta])* $name:ident $v:expr, [ $code:expr ],)+) => {
+        (ASSERT $f:ident $( $(#[$attr:meta])* $name:ident $c:expr, $v:expr, [ $code:expr ],)+) => {
             $(
                 #[allow(unused_mut)]
                 #[test]
@@ -561,67 +573,62 @@ mod tests {
                     use Machine;
                     let code = super::tokenize($code).unwrap();
                     let mut machine = Machine::new(code).unwrap();
-                    machine.run(vec![]).unwrap();
-                    assert_eq!($v, machine.stack[0]);
+                    let output = machine.run(vec![]).unwrap();
+                    assert_eq!($v, $f(machine.stack));
+                    assert_eq!($c, output.exit_code);
                 }
             )+
         };
-        (STACK $( $(#[$attr:meta])* $name:ident $v:expr, [ $code:expr ],)+) => {
-            $(
-                #[allow(unused_mut)]
-                #[test]
-                $(#[$attr])*
-                fn $name() {
-                    use Machine;
-                    let code = super::tokenize($code).unwrap();
-                    let mut machine = Machine::new(code).unwrap();
-                    machine.run(vec![]).unwrap();
-                    assert_eq!($v, machine.stack);
-                }
-            )+
+        ($( $(#[$attr:meta])* $name:ident $c:expr, $v:expr, [ $code:expr ],)+) => {
+            test_run! { ASSERT first_stack $( $(#[$attr])* $name $c, $v, [ $code ],)+ }
+        };
+        (STACK $( $(#[$attr:meta])* $name:ident $c:expr, $v:expr, [ $code:expr ],)+) => {
+            test_run! { ASSERT full_stack $( $(#[$attr])* $name $c, $v, [ $code ],)+ }
         };
     }
 
     test_run! {
 
-        test_addition Num(3), [ "1 2 +" ],
-        test_cast_to_int Num(1), [ "\"1\" cast_int" ],
-        test_cast_to_int_defaults_to_zero Num(0), [ "\"asdf\" cast_int" ],
-        test_cast_to_str String("1".to_owned()), [ "1 cast_str" ],
-        test_cast_to_backwards Num(1), [ "1 cast_str cast_int" ],
-        test_dup Num(4), [ "1 dup + dup +"],
-        test_if_true Num(5), [ "true 5 10 if" ],
-        test_if_false Num(10), [ "false 5 10 if"  ],
-        test_mod Num(0), [ "4 2 %" ],
-        test_dif Num(2), [ "4 2 /" ],
-        test_stop Num(0), [ "0 stop 1 +" ],
-        test_over Num(4), [ "2 4 over / +" ],
-        test_call_return Num(4), [ "1 1 7 call dup + stop + return" ],
-        test_label1 Num(0), [  "0 end jmp one: 1 + end: 0 +" ],
-        test_label2 Num(1), [  "0 one jmp one: 1 + end: 0 +" ],
-        test_swap Num(2), [ "1 2 swap" ],
-        test_drop Num(2), [ "1 drop 2" ],
-        test_rot1 Num(2), [ "1 2 3 rot" ],
-        test_rot2 Num(5), [ "1 2 3 rot drop +" ],
-        test_rot3 Num(3), [ "1 2 3 rot rot" ],
-        test_and Bool(true), [ "false not true and" ],
-        test_or Bool(true), [ "false true or" ],
+        test_addition 0, Num(3), [ "1 2 +" ],
+        test_cast_to_int 0, Num(1), [ "\"1\" cast_int" ],
+        test_cast_to_int_defaults_to_zero 0, Num(0), [ "\"asdf\" cast_int" ],
+        test_cast_to_str 0, String("1".to_owned()), [ "1 cast_str" ],
+        test_cast_to_backwards 0, Num(1), [ "1 cast_str cast_int" ],
+        test_dup 0, Num(4), [ "1 dup + dup +"],
+        test_if_true 0, Num(5), [ "true 5 10 if" ],
+        test_if_false 0, Num(10), [ "false 5 10 if"  ],
+        test_mod 0, Num(0), [ "4 2 %" ],
+        test_dif 0, Num(2), [ "4 2 /" ],
+        test_stop 0, Num(0), [ "0 stop 1 +" ],
+        test_over 0, Num(4), [ "2 4 over / +" ],
+        test_call_return 0, Num(4), [ "1 1 7 call dup + stop + return" ],
+        test_label1 0, Num(0), [  "0 end jmp one: 1 + end: 0 +" ],
+        test_label2 0, Num(1), [  "0 one jmp one: 1 + end: 0 +" ],
+        test_swap 0, Num(2), [ "1 2 swap" ],
+        test_drop 0, Num(2), [ "1 drop 2" ],
+        test_rot1 0, Num(2), [ "1 2 3 rot" ],
+        test_rot2 0, Num(5), [ "1 2 3 rot drop +" ],
+        test_rot3 0, Num(3), [ "1 2 3 rot rot" ],
+        test_and 0, Bool(true), [ "false not true and" ],
+        test_or 0, Bool(true), [ "false true or" ],
 
         #[should_panic(expected = "EmptyStack")]
-        test_pop Num(0), ["cast_str"],
+        test_pop 0, Num(0), ["cast_str"],
 
         #[should_panic(expected = "UndefinedLabel")]
-        test_undefined_label Num(0), [ "asdf" ],
+        test_undefined_label 0, Num(0), [ "asdf" ],
 
         #[should_panic(expected = "MultipleLabelDefinitions")]
-        test_multiple_label_definitions Num(0), [ "a: a:" ],
+        test_multiple_label_definitions 0, Num(0), [ "a: a:" ],
+
     }
 
     test_run! { STACK
-        test_addition_dup vec![Num(2), Num(2)], [ "1 1 + dup" ],
-        test_addition_dup2 vec![Num(2), Num(2), Num(2)], [ "1 1 + dup dup" ],
+        test_addition_dup 0, vec![Num(2), Num(2)], [ "1 1 + dup" ],
+        test_addition_dup2 0, vec![Num(2), Num(2), Num(2)], [ "1 1 + dup dup" ],
+        test_exit_code_1 1, { let v: Vec<StackValue> = vec![]; v }, [ "1 exit" ],
+        test_exit_code_0 0, { let v: Vec<StackValue> = vec![]; v }, [ "" ],
     }
-
 
     #[test]
     fn test_stack_operations_are_tiny() {
