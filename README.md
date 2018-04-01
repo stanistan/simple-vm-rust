@@ -67,6 +67,7 @@ Use [`cargo benchcmp`](https://github.com/BurntSushi/cargo-benchcmp) for bench c
 | `9eddfd3f54e838faf4eea49ed62bbc3fcb3c49bb` |        `129,146` |
 | `25f7cda330a34de18dc1a8fff68bc94c3f9b8bf5` |        `100,917` |
 | `933f94dcde1ce3bf3aa7aee72e15ccfa92d15b87` |         `84,027` |
+| `e4c00cb51ea5060e8d05f63a41237fa1cae0e28`  |         `77,163` |
 
 ```sh
 cd bench
