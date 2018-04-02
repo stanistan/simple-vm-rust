@@ -21,10 +21,6 @@ pub mod stack_operations;
 ///
 /// These are the operations that `StackOperation` is built on
 /// and what they return to the machine.
-///
-/// Some of these are sideeffecty.
-///
-/// TODO, make the side-effects _injectable_.
 pub enum MachineOperation {
     /// Adds the current `instruction_ptr` to the return stack and
     /// jumps to `usize`.
@@ -54,7 +50,9 @@ pub enum MachineOperation {
 }
 
 ops! {
+    /// Adds two numbers together.
     Plus + (Num(a), Num(b)) Push(Num(a + b)),
+    /// Subtracts two numbers
     Minus - (Num(a), Num(b)) Push(Num(b - a)),
     Multiply * (Num(a), Num(b)) Push(Num(a * b)),
     Divide / (Num(a), Num(b)) Push(Num(b / a)),
@@ -98,22 +96,6 @@ impl HeapSizeOf for StackValue {
             PossibleLabel(ref s) => s.heap_size_of_children(),
         }
     }
-}
-
-mod util {
-
-    pub fn sleep_ms(duration: u64) {
-        use std::thread;
-        use std::time;
-        thread::sleep(time::Duration::from_millis(duration))
-    }
-
-    pub fn read_line() -> String {
-        let mut input = String::new();
-        ::std::io::stdin().read_line(&mut input).unwrap();
-        input.trim().to_owned()
-    }
-
 }
 
 /// A value that can live on the stack.
@@ -193,6 +175,9 @@ pub struct RunStats;
 
 pub type Code = Vec<StackValue>;
 
+/// Contains the exit code of the vm program as well
+/// as statistics about its run if `feature=stats` is
+/// set during compilation.
 pub struct RunResult {
     pub exit_code: i32,
     pub stats: RunStats
@@ -204,8 +189,43 @@ pub enum StepResult {
     Stop(i32),
 }
 
+pub trait SideEffect: Default {
+    fn println(&mut self, value: StackValue);
+    fn read_line(&mut self) -> String;
+    fn sleep_ms(&mut self, duration: u64);
+}
+
+pub struct DefaultSideEffect;
+
+impl Default for DefaultSideEffect {
+    fn default() -> Self {
+        DefaultSideEffect
+    }
+}
+
+impl SideEffect for DefaultSideEffect {
+
+    fn read_line(&mut self) -> String {
+        let mut input = String::new();
+        ::std::io::stdin().read_line(&mut input).unwrap();
+        input.trim().to_owned()
+    }
+
+    fn sleep_ms(&mut self, duration: u64) {
+        use std::thread;
+        use std::time;
+        thread::sleep(time::Duration::from_millis(duration))
+    }
+
+    fn println(&mut self, value: StackValue) {
+        println!("{}", value);
+    }
+
+}
+
 #[derive(Debug)]
-pub struct Machine {
+pub struct Machine<E = DefaultSideEffect> where E: SideEffect {
+    effect: E,
     code: Code,
     instruction_ptr: usize,
     return_stack: Vec<usize>,
@@ -220,7 +240,7 @@ macro_rules! stats {
     }
 }
 
-impl Machine {
+impl <E: SideEffect> Machine<E> {
     /// Create a new machine for the code.
     ///
     /// This runs through a `preprocess` step.
@@ -228,6 +248,7 @@ impl Machine {
         let code = Self::preprocess(code)?;
         let len = code.len();
         Ok(Machine {
+            effect: E::default(),
             code,
             instruction_ptr: 0,
             return_stack: Vec::new(),
@@ -355,9 +376,9 @@ impl Machine {
                 }
                 _ => return ops!(ERR EmptyStack Return, return),
             },
-            Sleep(ms) => util::sleep_ms(ms),
-            Println(val) => println!("{}", val),
-            ReadLn => self.stack.push(StackValue::String(util::read_line())),
+            Sleep(ms) => self.effect.sleep_ms(ms),
+            Println(val) => self.effect.println(val),
+            ReadLn => self.stack.push(StackValue::String(self.effect.read_line())),
             NA => (),
             Stop(code) => return Ok(StepResult::Stop(code)),
         }
@@ -575,7 +596,7 @@ mod tests {
                 fn $name() {
                     use Machine;
                     let code = super::tokenize($code).unwrap();
-                    let mut machine = Machine::new(code).unwrap();
+                    let mut machine = Machine::<DefaultSideEffect>::new(code).unwrap();
                     let output = machine.run(vec![]).unwrap();
                     assert_eq!($v, $f(machine.stack));
                     assert_eq!($c, output.exit_code);

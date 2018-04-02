@@ -52,10 +52,10 @@ Run this in release mode.
 cargo run --release -- examples/fib 5
 ```
 
-Run this with `stats`, `mem-usage`, and `debug` outputs, assuming you have [`rustup`](https://www.rustup.rs):
+Run this with `stats`, and `mem-usage` outputs, assuming you have [`rustup`](https://www.rustup.rs):
 
 ```sh
-rustup run nightly cargo run --release --features=stats,mem-usage,debug -- examples/fib 5
+rustup run nightly cargo run --release --features=stats,mem-usage -- examples/fib 5
 ```
 
 ## Benchmarking & Profiling
@@ -76,9 +76,8 @@ All of these are run on an Early 2015 13-inch Macbook Pro, 2.9 GHz Intel Core i5
 | `e4c00cb51ea5060e8d05f63a41237fa1cae0e28`  |         `77,163` |
 
 ```sh
-cd bench
-git stash && cargo bench > current && git stash pop && cargo bench > new
-cargo benchcmp current new
+git stash && cargo bench > bench-current && git stash pop && cargo bench > bench-new
+cargo benchcmp bench-current bench-new
 ```
 
 #### Getting Flamegraphs
@@ -132,6 +131,14 @@ error: Could not compile `simple_vm`.
 
 To learn more, run the command again with --verbose.
 ```
+
+##### Notes on the Dockerfile
+
+[`rustlang/rust:nightly`](https://hub.docker.com/r/rustlang/rust/~/dockerfile/) depends on
+[`buildpacks-deps:stretch`](https://github.com/docker-library/buildpack-deps/blob/d7da72aaf3bb93fecf5fcb7c6ff154cb0c55d1d1/stretch/Dockerfile) depends on
+...eventually [`debian:stretch`](https://github.com/debuerreotype/docker-debian-artifacts/blob/603ba998fd1175e70bf3ac5d79a5d2c1ed9a52fe/stretch/Dockerfile),
+which is the same as `debian:jesse` :shrug:
+
 
 __Everything below this currently doesn't work__
 

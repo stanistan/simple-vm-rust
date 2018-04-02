@@ -45,7 +45,7 @@ fn main() {
         .expect("Reading the file failed");
 
     let code = tokenize(&contents).expect("Could not tokenize file contents");
-    let mut machine = Machine::new(code).expect("Could not create machine.");
+    let mut machine = Machine::<DefaultSideEffect>::new(code).expect("Could not create machine.");
 
     #[allow(unused_variables)]
     let response = machine.run(args).expect("Code execution failed");

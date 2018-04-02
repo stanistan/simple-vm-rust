@@ -21,7 +21,7 @@ fn bench_tokenize_fib(b: &mut Bencher) {
 fn bench_create_machine(b: &mut Bencher) {
     let code = tokenize(FIB_CODE).unwrap();
     b.iter(move || {
-        Machine::new(code.clone()).unwrap();
+        Machine::<DefaultSideEffect>::new(code.clone()).unwrap();
     });
 }
 
@@ -31,7 +31,7 @@ macro_rules! bench_fib_arg {
         fn $ident(b: &mut Bencher) {
             let code = tokenize(FIB_CODE).unwrap();
             let args = tokenize($arg).unwrap();
-            let mut machine = Machine::new(code).unwrap();
+            let mut machine = Machine::<DefaultSideEffect>::new(code).unwrap();
             b.iter(move || {
                 machine.reset();
                 machine.run(args.clone()).unwrap();
