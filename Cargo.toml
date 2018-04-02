@@ -4,7 +4,6 @@ version = "0.1.0"
 authors = ["Stan Rozenraukh <stan@stanistan.com>"]
 
 [lib]
-doctest = false
 path = "src/lib.rs"
 
 [profile.release]
@@ -12,15 +11,6 @@ path = "src/lib.rs"
 debug = true
 
 [features]
-# This will print out data about the stack (and return stack)
-# _before_ an operation is performed, what the operation is,
-# and after it's performed.
-#
-# If you're using `debug` to run something you'll probably want to
-# pipe to `less` as it works because this all goes to stdout and
-# will be pretty noisy.
-debug = []
-
 # This will enable usage of the `RunStats` struct during `run`,
 # which keeps track of how many operations there are and
 # the size of the program in memory using "heapsize".
@@ -28,11 +18,6 @@ stats = [ "heapsize" ]
 
 # This will print out stats from jemalloc...
 mem-usage = [ ]
-
-[[bin]]
-name = "simple_vm"
-path = "src/bin.rs"
-doc = false
 
 [dependencies]
 failure = "0.1.1"

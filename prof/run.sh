@@ -23,15 +23,15 @@ if [ ! -f /.dockerenv ]; then
     echo Running outside of a docker context
     echo building the docker image, and will recurse...
     echo
-    TAG=simple-vm-perf
-    docker build -t $TAG . -f prof/Dockerfile
+    TAG=simple-vm-prof
+    docker build -t $TAG -f prof/Dockerfile .
     docker run --privileged -it -v "`pwd`/prof":/prof $TAG /prof/run.sh "$@"
     echo
     ls -la prof/data
     exit 0
 fi
 
-if [ -z "$VOLUME_DATA_DIR" ] || [ -z "$BENCH_DIR" ]; then
+if [ -z "$VOLUME_DATA_DIR" ] || [ -z "$BASE_DIR" ]; then
     echo Missing env vars from Docker image
     exit 1
 fi

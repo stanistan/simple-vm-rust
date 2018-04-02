@@ -45,6 +45,8 @@ pub enum MachineOperation {
     Return,
     /// Writes a value to stdout
     Println(StackValue),
+    /// Reads from stdin
+    ReadLn,
     /// Sleeps :shrug:
     Sleep(u64),
     /// Stops execution of the Machine with an exit code.
@@ -77,7 +79,7 @@ ops! {
     SleepMS sleep_ms (Num(a)) Sleep(a as u64),
     Exit exit (Num(exit_code)) Stop(exit_code as i32),
     Stop stop () Stop(0),
-    Read read () Push(String(util::read_line())), //TODO should be a machine operation
+    Read read () ReadLn,
     Over over (a, b) PushThree(b.clone(), a, b),
     Call call (Num(a)) Call(a as usize),
     Return return () Return,
@@ -355,6 +357,7 @@ impl Machine {
             },
             Sleep(ms) => util::sleep_ms(ms),
             Println(val) => println!("{}", val),
+            ReadLn => self.stack.push(StackValue::String(util::read_line())),
             NA => (),
             Stop(code) => return Ok(StepResult::Stop(code)),
         }

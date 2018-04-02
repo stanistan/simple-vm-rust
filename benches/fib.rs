@@ -8,7 +8,7 @@ use simple_vm::*;
 
 /// Path to fib example that doesn't print when
 /// it's finished.
-static FIB_CODE: &'static str = include_str!("../../examples/fib_no_print");
+static FIB_CODE: &'static str = include_str!("../examples/fib_no_print");
 
 #[bench]
 fn bench_tokenize_fib(b: &mut Bencher) {

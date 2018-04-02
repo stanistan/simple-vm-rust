@@ -1,5 +1,3 @@
-fn main() { }
-/*
 #![cfg_attr(feature = "mem-usage", feature(libc))]
 extern crate simple_vm;
 
@@ -49,12 +47,13 @@ pub fn main() {
     let mut machine = Machine::new(code).expect("Could not create machine.");
 
     #[allow(unused_variables)]
-    let stats = machine.run(args).expect("Code execution failed");
+    let response = machine.run(args).expect("Code execution failed");
 
     #[cfg(feature = "stats")]
-    println!("{:#?}", stats);
+    println!("{:#?}", response.stats);
 
     #[cfg(feature = "mem-usage")]
     unsafe { je_stats_print(write_cb, std::ptr::null(), std::ptr::null()) };
+
+    std::process::exit(response.exit_code);
 }
-*/

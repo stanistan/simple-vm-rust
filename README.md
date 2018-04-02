@@ -8,33 +8,37 @@ exercise for myself. Absolutely do not use this for anything real or production 
 The language and APIs will change over time.
 
 A lot of this is based on https://csl.name/post/vm, but while that is written in Python,
-this is in not :) So there are obviously some more constraints in how this is run.
+this is in not :)
+
+I'm using the simplicity of the language to play around with my understanding of Rust,
+for code organization, performance optimizations, and other idioms. If you check out the
+[benchmarking](#benchmarking) section, you can see that I've spent a bunch of time on
+trying to optimize the Fibonnaci program in the `examples/` directory, and have made a
+ton of prorgress. As of `e4c00cb51ea5060e8d05f63a41237fa1cae0e2`, `fib_10` runs in about
+40% of the original runtime.
 
 ## The Language
 
 Right now this is a super simple stack based language that supports:
 
-1. integers (no floats yet)
-2. strings
-3. labels
-4. jmp / call / return
-
-It does allocation for every time something is moved on the stack... instead of using
-references or reference counting, values will be heap allocated every time they're pushed,
-and cloned from the code when it's being executed, this is currently pretty inefficient and
-I'm hoping to make it better.
+- Basic values: `Num`, `Bool`, and `String`
+- Labels (for `jmp`, `call`, and `return`)
+- Operations: `swap`, `rot`, `over`, `drop`, `dup`
+- Comparison and boolean operations
+- Arithmetic operations
+- string to int and int to string parsing (no error handling for this)
 
 ## Running
 
 Assuming you have [`rustup`](https://www.rustup.rs).
 
-### tests
+#### Testing
 
 ```sh
 cargo test
 ```
 
-### Examples
+#### Examples
 
 Run the fib program for the 5th fibonacci number (debug).
 
@@ -54,11 +58,13 @@ Run this with `stats`, `mem-usage`, and `debug` outputs, assuming you have [`rus
 rustup run nightly cargo run --release --features=stats,mem-usage,debug -- examples/fib 5
 ```
 
-### Benchmarking
+## Benchmarking & Profiling
 
 Use [`cargo benchcmp`](https://github.com/BurntSushi/cargo-benchcmp) for bench comparisons.
 
 #### Commits and perf numbers over time
+
+All of these are run on an Early 2015 13-inch Macbook Pro, 2.9 GHz Intel Core i5, 16GB RAM.
 
 | Commit                                     | `fib_10` ns/iter |
 | :----------------------------------------- | ---------------: |
@@ -75,14 +81,14 @@ git stash && cargo bench > current && git stash pop && cargo bench > new
 cargo benchcmp current new
 ```
 
-### Getting Flamegraphs
+#### Getting Flamegraphs
 
 The idea here is to run a profiler inside a docker container to actually get some flamegraphs
 out, since running them on MacOS is [pretty unweildy](http://carol-nichols.com/2015/12/09/rust-profiling-on-osx-cpu-time/),
 and just straight up might not work at all, but it is [usable elsewhere](https://blog.anp.lol/rust/2016/07/24/profiling-rust-perf-flamegraph/).
 
-We are also using [this](https://github.com/brendangregg/FlameGraph), so that should be somewhere
-and available to you/me.
+We are also using [BrendanGregg/FlameGraph](https://github.com/brendangregg/FlameGraph), so that should be somewhere
+in your `$PATH`.
 
 ```sh
 prof/run.sh
@@ -109,7 +115,5 @@ Ok, so once we have that built out we can run it!
 docker run --privileged -it -v "`pwd`/prof":/prof simple-vm-perf /prof/run.sh fib_10
 cat prof/data/perf.script | stackcollapse-perf.pl | flamegraph.pl > bench.svg
 ```
-
-(That assumes that Flamegraph things are in your `$PATH`)
 
 ![bench.svg](./bench.svg)
