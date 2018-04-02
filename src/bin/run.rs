@@ -5,8 +5,8 @@ extern crate simple_vm;
 use simple_vm::*;
 
 use std::env;
-use std::io::prelude::*;
 use std::fs::File;
+use std::io::prelude::*;
 
 #[cfg(feature = "mem-usage")]
 extern crate libc;
@@ -54,7 +54,9 @@ fn main() {
     println!("{:#?}", response.stats);
 
     #[cfg(feature = "mem-usage")]
-    unsafe { je_stats_print(write_cb, std::ptr::null(), std::ptr::null()) };
+    unsafe {
+        je_stats_print(write_cb, std::ptr::null(), std::ptr::null())
+    };
 
     std::process::exit(response.exit_code);
 }

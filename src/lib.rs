@@ -4,12 +4,11 @@ extern crate failure_derive;
 
 #[cfg(feature = "stats")]
 extern crate heapsize;
-
 #[cfg(feature = "stats")]
 use heapsize::*;
 
-use std::str::FromStr;
 use std::collections::HashMap;
+use std::str::FromStr;
 
 pub mod error;
 use error::StackError;
@@ -50,9 +49,7 @@ pub enum MachineOperation {
 }
 
 ops! {
-    /// Adds two numbers together.
     Plus + (Num(a), Num(b)) Push(Num(a + b)),
-    /// Subtracts two numbers
     Minus - (Num(a), Num(b)) Push(Num(b - a)),
     Multiply * (Num(a), Num(b)) Push(Num(a * b)),
     Divide / (Num(a), Num(b)) Push(Num(b / a)),
@@ -180,7 +177,7 @@ pub type Code = Vec<StackValue>;
 /// set during compilation.
 pub struct RunResult {
     pub exit_code: i32,
-    pub stats: RunStats
+    pub stats: RunStats,
 }
 
 #[derive(Copy, Clone)]
@@ -204,7 +201,6 @@ impl Default for DefaultSideEffect {
 }
 
 impl SideEffect for DefaultSideEffect {
-
     fn read_line(&mut self) -> String {
         let mut input = String::new();
         ::std::io::stdin().read_line(&mut input).unwrap();
@@ -220,11 +216,13 @@ impl SideEffect for DefaultSideEffect {
     fn println(&mut self, value: StackValue) {
         println!("{}", value);
     }
-
 }
 
 #[derive(Debug)]
-pub struct Machine<E = DefaultSideEffect> where E: SideEffect {
+pub struct Machine<E = DefaultSideEffect>
+where
+    E: SideEffect,
+{
     effect: E,
     code: Code,
     instruction_ptr: usize,
@@ -236,11 +234,13 @@ pub struct Machine<E = DefaultSideEffect> where E: SideEffect {
 macro_rules! stats {
     (inc $m:ident $field:ident) => {
         #[cfg(feature = "stats")]
-        { $m.stats.$field += 1; }
-    }
+        {
+            $m.stats.$field += 1;
+        }
+    };
 }
 
-impl <E: SideEffect> Machine<E> {
+impl<E: SideEffect> Machine<E> {
     /// Create a new machine for the code.
     ///
     /// This runs through a `preprocess` step.
@@ -362,12 +362,12 @@ impl <E: SideEffect> Machine<E> {
             PushTwo(v1, v2) => {
                 self.stack.push(v1);
                 self.stack.push(v2);
-            },
+            }
             PushThree(v1, v2, v3) => {
                 self.stack.push(v1);
                 self.stack.push(v2);
                 self.stack.push(v3);
-            },
+            }
             PushMany(values) => self.stack_push(values),
             Return => match self.return_stack.pop() {
                 Some(jump_to) => {
@@ -403,7 +403,6 @@ impl <E: SideEffect> Machine<E> {
     /// instructions to proceed with, `Ok(true)`, otherwise
     /// it will return an `Err(StackError)`.
     pub fn step(&mut self) -> Result<StepResult, StackError> {
-
         if self.instruction_ptr == self.code.len() {
             return Ok(StepResult::Stop(0));
         }
@@ -441,7 +440,6 @@ impl <E: SideEffect> Machine<E> {
     /// run stats if this was compiled with `features=stats`, otherwise an StackError
     /// if this failed for any reason.
     pub fn run(&mut self, args: Vec<StackValue>) -> Result<RunResult, StackError> {
-
         #[cfg(feature = "stats")]
         self.setup_stats(args.clone());
 
@@ -449,15 +447,13 @@ impl <E: SideEffect> Machine<E> {
 
         loop {
             match self.step() {
-                Err(e) => {
-                    return Err(e)
-                },
+                Err(e) => return Err(e),
                 Ok(StepResult::Stop(exit_code)) => {
                     return Ok(RunResult {
                         exit_code,
-                        stats: self.stats.clone()
+                        stats: self.stats.clone(),
                     })
-                },
+                }
                 Ok(StepResult::Continue) => {
                     #[cfg(feature = "stats")]
                     {
@@ -468,7 +464,7 @@ impl <E: SideEffect> Machine<E> {
                             self.stats.max_stack_heap_size = self.stack.heap_size_of_children();
                         }
                     }
-                },
+                }
             }
         }
     }

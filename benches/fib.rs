@@ -3,8 +3,8 @@
 extern crate simple_vm;
 extern crate test;
 
-use test::Bencher;
 use simple_vm::*;
+use test::Bencher;
 
 /// Path to fib example that doesn't print when
 /// it's finished.
@@ -26,7 +26,7 @@ fn bench_create_machine(b: &mut Bencher) {
 }
 
 macro_rules! bench_fib_arg {
-    ($ident: ident, $arg: expr) => {
+    ($ident:ident, $arg:expr) => {
         #[bench]
         fn $ident(b: &mut Bencher) {
             let code = tokenize(FIB_CODE).unwrap();
@@ -37,7 +37,7 @@ macro_rules! bench_fib_arg {
                 machine.run(args.clone()).unwrap();
             });
         }
-    }
+    };
 }
 
 bench_fib_arg!(bench_fib_1, "1");

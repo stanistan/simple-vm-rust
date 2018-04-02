@@ -125,7 +125,9 @@ macro_rules! ops {
                 //! Corresponds to an enum variant of `StackOperation` of the same name as the module.
                 use super::*;
                 #[allow(unreachable_patterns, unused_imports, unreachable_code)]
-                pub fn execute<E: SideEffect>(machine: &mut Machine<E>) -> Result<StepResult, StackError> {
+                pub fn execute<E: SideEffect>(machine: &mut Machine<E>)
+                    -> Result<StepResult, StackError>
+                {
                     use StackValue::*;
                     use MachineOperation::*;
                     ops!(MATCH machine, $e, $($type),*)
@@ -136,7 +138,9 @@ macro_rules! ops {
         impl StackOperation {
             /// Dispatch a generated `StackOperation` variant to its relevant
             /// `impl_stack_operation::$OperationVariant::execute()` function.
-            pub fn dispatch<E: SideEffect>(&self, machine: &mut Machine<E>) -> Result<StepResult, StackError> {
+            pub fn dispatch<E: SideEffect>(&self, machine: &mut Machine<E>)
+                -> Result<StepResult, StackError>
+            {
                 match *self {
                     $(StackOperation::$t => impl_stack_operation::$t::execute(machine),)+
                 }

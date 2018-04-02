@@ -17,6 +17,7 @@ debug = true
 stats = [ "heapsize" ]
 
 # This will print out stats from jemalloc...
+# see src/bin/run.rs
 mem-usage = [ ]
 
 [dependencies]
