@@ -14,8 +14,8 @@ I'm using the simplicity of the language to play around with my understanding of
 for code organization, performance optimizations, and other idioms. If you check out the
 [benchmarking](#benchmarking) section, you can see that I've spent a bunch of time on
 trying to optimize the Fibonnaci program in the `examples/` directory, and have made a
-ton of prorgress. As of `e4c00cb51ea5060e8d05f63a41237fa1cae0e2`, `fib_10` runs in about
-40% of the original runtime.
+ton of prorgress. As of `d474ca45365c2f6dc3d15c3357f64fa439db5be`, `fib_10` runs in about
+33% of the original runtime.
 
 ## The Language
 
@@ -74,6 +74,7 @@ All of these are run on an Early 2015 13-inch Macbook Pro, 2.9 GHz Intel Core i5
 | `25f7cda330a34de18dc1a8fff68bc94c3f9b8bf5` |        `100,917` |
 | `933f94dcde1ce3bf3aa7aee72e15ccfa92d15b87` |         `84,027` |
 | `e4c00cb51ea5060e8d05f63a41237fa1cae0e28`  |         `77,163` |
+| `d474ca45365c2f6dc3d15c3357f64fa439db5be`  |         `58,518` |
 
 ```sh
 git stash && cargo bench > bench-current && git stash pop && cargo bench > bench-new
