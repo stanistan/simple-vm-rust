@@ -1,4 +1,5 @@
 #![cfg_attr(feature = "mem-usage", feature(libc))]
+
 extern crate simple_vm;
 
 use simple_vm::*;
@@ -29,7 +30,7 @@ extern "C" fn write_cb(_: *const libc::c_void, message: *const libc::c_char) {
     );
 }
 
-pub fn main() {
+fn main() {
     let file_path: String = env::args().skip(1).take(1).collect();
     if file_path.is_empty() {
         panic!("Expected a file path");

@@ -90,6 +90,51 @@ and just straight up might not work at all, but it is [usable elsewhere](https:/
 We are also using [BrendanGregg/FlameGraph](https://github.com/brendangregg/FlameGraph), so that should be somewhere
 in your `$PATH`.
 
+##### Weirdness
+
+I'm trying to get minimum buildtime for the profiling docker image by following something similar to [this post](https://whitfin.io/speeding-up-rust-docker-builds/).
+While that works well for building out the lib and main image, it seems to be failing with compiler errors for things
+inside of `src/bin/...` and `benches/`.
+
+```
+Compiling simple_vm v0.1.0 (file:///usr/src/simple_vm)
+error[E0433]: failed to resolve. Use of undeclared type or module `Machine`
+  --> src/bin/run.rs:48:23
+   |
+48 |     let mut machine = Machine::new(code).expect("Could not create machine.");
+   |                       ^^^^^^^ Use of undeclared type or module `Machine`
+
+error[E0425]: cannot find function `tokenize` in this scope
+  --> src/bin/run.rs:40:16
+   |
+40 |     let args = tokenize(&script_args.join(" ")).expect("could not parse args");
+   |                ^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `tokenize` in this scope
+  --> src/bin/run.rs:47:16
+   |
+47 |     let code = tokenize(&contents).expect("Could not tokenize file contents");
+   |                ^^^^^^^^ not found in this scope
+
+warning: unused import: `simple_vm::*`
+ --> src/bin/run.rs:5:5
+  |
+5 | use simple_vm::*;
+  |     ^^^^^^^^^^^^
+  |
+  = note: #[warn(unused_imports)] on by default
+
+error: aborting due to 3 previous errors
+
+Some errors occurred: E0425, E0433.
+For more information about an error, try `rustc --explain E0425`.
+error: Could not compile `simple_vm`.
+
+To learn more, run the command again with --verbose.
+```
+
+__Everything below this currently doesn't work__
+
 ```sh
 prof/run.sh
 ```

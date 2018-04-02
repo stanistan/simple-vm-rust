@@ -11,21 +11,23 @@ RUN apt-get update && apt-get install -y linux-perf && \
 
 WORKDIR /usr/src
 RUN USER=root cargo new simple_vm --lib
-COPY Cargo.toml Cargo.lock $BASE_DIR/
+#COPY Cargo.toml Cargo.lock $BASE_DIR/
 
 WORKDIR $BASE_DIR
+COPY Cargo.toml Cargo.lock ./
 RUN cargo build --release
 RUN rm src/*.rs
 
-COPY src $BASE_DIR/src
-COPY examples $BASE_DIR/examples
-COPY benches $BASE_DIR/benches
+COPY . .
+#COPY src $BASE_DIR/src
+#COPY benches $BASE_DIR/benches
+#COPY examples $BASE_DIR/examples
 
 # Build and test to make sure everything
 # works correctly before running
 # benchmarks
-#RUN cargo build --release
-#RUN cargo test --release
+RUN cargo build --release
+RUN cargo test --release
 
 # Do benchmarks *last*
 #RUN cargo bench --no-run
