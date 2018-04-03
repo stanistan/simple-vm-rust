@@ -468,7 +468,7 @@ pub fn tokenize(input: &str) -> Result<Code, StackError> {
             if !self.token.is_empty() {
                 let value = StackValue::from_str(&self.token)?;
                 self.tokens.push(value);
-                self.token = String::new();
+                self.token.clear();
             }
             Ok(())
         }
