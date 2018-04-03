@@ -19,7 +19,6 @@ pub trait SideEffect: Default {
 pub struct DefaultSideEffect;
 
 impl SideEffect for DefaultSideEffect {
-
     fn read_line(&mut self) -> String {
         let mut input = String::new();
         ::std::io::stdin().read_line(&mut input).unwrap();

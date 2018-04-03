@@ -552,16 +552,49 @@ mod tests {
         assert_tokens!([String("hi".to_owned())], "\"hi\"");
     }
 
-    fn full_stack(stack: Vec<StackValue>) -> Vec<StackValue> {
-        stack
+    fn full_stack<E: SideEffect>(machine: Machine<E>) -> Vec<StackValue> {
+        machine.stack
     }
 
-    fn first_stack(stack: Vec<StackValue>) -> StackValue {
-        stack[0].clone()
+    fn first_stack<E: SideEffect>(machine: Machine<E>) -> StackValue {
+        machine.stack[0].clone()
+    }
+
+    fn effect<E: SideEffect>(machine: Machine<E>) -> E {
+        machine.effect
+    }
+
+    #[derive(Debug, Default, PartialEq, Eq)]
+    struct NoIOEffect {
+        line: std::string::String,
+        output: Vec<std::string::String>,
+        slept: Vec<u64>,
+    }
+
+    impl SideEffect for NoIOEffect {
+        fn read_line(&mut self) -> std::string::String {
+            self.line.clone()
+        }
+        fn sleep_ms(&mut self, duration: u64) {
+            self.slept.push(duration)
+        }
+        fn println(&mut self, value: StackValue) {
+            self.output.push(format!("{}", value))
+        }
+    }
+
+    macro_rules! effect {
+        ($( $field:ident: $type:expr, )+) => {
+            NoIOEffect {
+                $( $field: $type, )+
+                line: "10".to_owned(),
+                ..NoIOEffect::default()
+            }
+        }
     }
 
     macro_rules! test_run {
-        (ASSERT $f:ident $( $(#[$attr:meta])* $name:ident $c:expr, $v:expr, [ $code:expr ],)+) => {
+        ([ $f:ident ] $( $(#[$attr:meta])* $name:ident $c:expr, $v:expr, [ $code:expr ],)+) => {
             $(
                 #[allow(unused_mut)]
                 #[test]
@@ -569,22 +602,17 @@ mod tests {
                 fn $name() {
                     use Machine;
                     let code = super::tokenize($code).unwrap();
-                    let mut machine = Machine::<DefaultSideEffect>::new(code).unwrap();
+                    let mut machine = Machine::<NoIOEffect>::new(code).unwrap();
+                    machine.effect.line = "10".to_owned();
                     let output = machine.run(vec![]).unwrap();
-                    assert_eq!($v, $f(machine.stack));
+                    assert_eq!($v, $f(machine));
                     assert_eq!($c, output.exit_code);
                 }
             )+
         };
-        ($( $(#[$attr:meta])* $name:ident $c:expr, $v:expr, [ $code:expr ],)+) => {
-            test_run! { ASSERT first_stack $( $(#[$attr])* $name $c, $v, [ $code ],)+ }
-        };
-        (STACK $( $(#[$attr:meta])* $name:ident $c:expr, $v:expr, [ $code:expr ],)+) => {
-            test_run! { ASSERT full_stack $( $(#[$attr])* $name $c, $v, [ $code ],)+ }
-        };
     }
 
-    test_run! {
+    test_run! { [first_stack]
 
         test_addition 0, Num(3), [ "1 2 +" ],
         test_cast_to_int 0, Num(1), [ "\"1\" cast_int" ],
@@ -603,6 +631,7 @@ mod tests {
         test_label2 0, Num(1), [  "0 one jmp one: 1 + end: 0 +" ],
         test_swap 0, Num(2), [ "1 2 swap" ],
         test_drop 0, Num(2), [ "1 drop 2" ],
+        test_readline 0, Bool(true), [ "10 read cast_int =="],
         test_rot1 0, Num(2), [ "1 2 3 rot" ],
         test_rot2 0, Num(5), [ "1 2 3 rot drop +" ],
         test_rot3 0, Num(3), [ "1 2 3 rot rot" ],
@@ -620,11 +649,17 @@ mod tests {
 
     }
 
-    test_run! { STACK
+    test_run! { [full_stack]
         test_addition_dup 0, vec![Num(2), Num(2)], [ "1 1 + dup" ],
         test_addition_dup2 0, vec![Num(2), Num(2), Num(2)], [ "1 1 + dup dup" ],
         test_exit_code_1 1, { let v: Vec<StackValue> = vec![]; v }, [ "1 exit" ],
         test_exit_code_0 0, { let v: Vec<StackValue> = vec![]; v }, [ "" ],
+    }
+
+    test_run! { [effect]
+        test_sleep 0, effect! { slept: vec![10], }, [ "10 sleep_ms" ],
+        test_subsequent_sleeps 0, effect! { slept: vec![1, 1, 1], }, [ "1 dup dup sleep_ms sleep_ms sleep_ms" ],
+        test_writes 0, effect! { output: vec!["10".to_owned(), "\"10\"".to_owned()], }, [ "10 dup println cast_str println" ],
     }
 
     #[test]
