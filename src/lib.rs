@@ -11,7 +11,10 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 pub mod error;
+pub mod side_effect;
+
 use error::StackError;
+pub use side_effect::*;
 
 #[macro_use]
 pub mod stack_operations;
@@ -186,40 +189,14 @@ pub enum StepResult {
     Stop(i32),
 }
 
-pub trait SideEffect: Default {
-    fn println(&mut self, value: StackValue);
-    fn read_line(&mut self) -> String;
-    fn sleep_ms(&mut self, duration: u64);
-}
-
-pub struct DefaultSideEffect;
-
-impl Default for DefaultSideEffect {
-    fn default() -> Self {
-        DefaultSideEffect
-    }
-}
-
-impl SideEffect for DefaultSideEffect {
-    fn read_line(&mut self) -> String {
-        let mut input = String::new();
-        ::std::io::stdin().read_line(&mut input).unwrap();
-        input.trim().to_owned()
-    }
-
-    fn sleep_ms(&mut self, duration: u64) {
-        use std::thread;
-        use std::time;
-        thread::sleep(time::Duration::from_millis(duration))
-    }
-
-    fn println(&mut self, value: StackValue) {
-        println!("{}", value);
-    }
-}
-
+/// This is the Stack Machine.
+///
+/// It is generic to a `SideEffect` which is used as
+/// a zero-size memory dependency (at rust runtime),
+/// but can be injected to test reading to and writing
+/// from stdout.
 #[derive(Debug)]
-pub struct Machine<E = DefaultSideEffect>
+pub struct Machine<E>
 where
     E: SideEffect,
 {
@@ -345,10 +322,10 @@ impl<E: SideEffect> Machine<E> {
 
     /// Dispatch given the result from the stack operation, which gets consumed here.
     ///
-    /// Returns true or false to indicate whether the `run` loop should continue.
-    pub fn dispatch(&mut self, result: MachineOperation) -> Result<StepResult, StackError> {
+    /// Returns an Error or a StepResult indicating how this loop should continue.
+    pub fn dispatch(&mut self, op: MachineOperation) -> Result<StepResult, StackError> {
         use MachineOperation::*;
-        match result {
+        match op {
             Call(to) => {
                 stats!(inc self calls);
                 self.return_stack.push(self.instruction_ptr);
