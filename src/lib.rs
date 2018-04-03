@@ -450,6 +450,7 @@ impl<E: SideEffect> Machine<E> {
 /// Given a `String` it should break this up into
 /// a list of tokens that can be parsed into `StackValue`.
 pub fn tokenize(input: &str) -> Result<Code, StackError> {
+
     struct ParserState {
         prev_is_escape: bool,
         ignore_til_eol: bool,
@@ -484,6 +485,7 @@ pub fn tokenize(input: &str) -> Result<Code, StackError> {
     };
 
     for c in input.chars() {
+
         if state.ignore_til_eol {
             if c == '\n' {
                 state.ignore_til_eol = false;
@@ -511,6 +513,8 @@ pub fn tokenize(input: &str) -> Result<Code, StackError> {
             '#' => {
                 if !state.token_is_string() {
                     state.ignore_til_eol = true;
+                } else {
+                    state.push_char(c);
                 }
             }
             ' ' | '\n' | '\t' | '\r' => {
@@ -547,6 +551,7 @@ mod tests {
         assert_tokens!([], "# whatever man");
         assert_tokens!([], "# \"sup\" println read");
         assert_tokens!([], "      ");
+        assert_tokens!([String("#".to_owned())], "\"#\"");
         assert_tokens!([Num(0)], "0");
         assert_tokens!([Num(0), Num(1)], "0 1");
         assert_tokens!([String("hi".to_owned())], "\"hi\"");
