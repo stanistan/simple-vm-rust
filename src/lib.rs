@@ -564,11 +564,21 @@ mod tests {
         machine.effect
     }
 
-    #[derive(Debug, Default, PartialEq, Eq)]
+    #[derive(Debug, PartialEq, Eq)]
     struct NoIOEffect {
         line: std::string::String,
         output: Vec<std::string::String>,
         slept: Vec<u64>,
+    }
+
+    impl Default for NoIOEffect {
+        fn default() -> NoIOEffect {
+            NoIOEffect {
+                line: "10".to_owned(), // we use this for testing
+                output: vec![],
+                slept: vec![],
+            }
+        }
     }
 
     impl SideEffect for NoIOEffect {
@@ -587,7 +597,6 @@ mod tests {
         ($( $field:ident: $type:expr, )+) => {
             NoIOEffect {
                 $( $field: $type, )+
-                line: "10".to_owned(),
                 ..NoIOEffect::default()
             }
         }
@@ -603,7 +612,6 @@ mod tests {
                     use Machine;
                     let code = super::tokenize($code).unwrap();
                     let mut machine = Machine::<NoIOEffect>::new(code).unwrap();
-                    machine.effect.line = "10".to_owned();
                     let output = machine.run(vec![]).unwrap();
                     assert_eq!($v, $f(machine));
                     assert_eq!($c, output.exit_code);
