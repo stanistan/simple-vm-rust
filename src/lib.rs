@@ -25,8 +25,6 @@ pub enum MachineOperation {
     Jump(usize),
     /// Does nothing
     NA,
-    /// Appends many values to the stack.
-    PushMany(Vec<StackValue>),
     /// Appends one value to the stack.
     Push(StackValue),
     /// Appends two values to the stack.
@@ -290,7 +288,6 @@ impl<E: SideEffect> Machine<E> {
                 self.stack.push(v2);
                 self.stack.push(v3);
             }
-            PushMany(values) => self.stack_push(values),
             Return => match self.return_stack.pop() {
                 Some(jump_to) => {
                     self.jump(jump_to);
@@ -329,7 +326,6 @@ impl<E: SideEffect> Machine<E> {
         // reference to *this Machine* struct, which is a problem, since the `Machine`
         // owns the code that it operates on.
         let value: StackValue = {
-            // this is safe because we did the bounds check above.
             let value: &StackValue = &self.code[self.instruction_ptr];
             self.instruction_ptr += 1;
             if let StackValue::Label(_) = *value {
