@@ -162,17 +162,21 @@ impl<E: SideEffect> Machine<E> {
     /// Create a new machine for the code.
     ///
     /// This runs through a `preprocess` step.
-    pub fn new(code: Code, step: bool) -> Result<Self, StackError> {
+    pub fn new(code: Code) -> Result<Self, StackError> {
         let code = Self::preprocess(code)?;
         let len = code.len();
         Ok(Machine {
             effect: E::default(),
-            step,
             code,
+            step: false,
             instruction_ptr: 0,
             return_stack: Vec::new(),
             stack: Vec::with_capacity(len),
         })
+    }
+
+    pub fn enable_step(&mut self) {
+        self.step = true;
     }
 
     pub fn reset(&mut self) {
@@ -594,7 +598,7 @@ mod tests {
     test_run! { [effect]
         test_sleep 0, effect! { slept: vec![10], }, [ "10 sleep_ms" ],
         test_subsequent_sleeps 0, effect! { slept: vec![1, 1, 1], }, [ "1 dup dup sleep_ms sleep_ms sleep_ms" ],
-        test_writes 0, effect! { output: vec!["10".to_owned(), "\"10\"".to_owned()], }, [ "10 dup println cast_str println" ],
+        test_writes 0, effect! { output: vec!["10".to_owned(), "10".to_owned()], }, [ "10 dup println cast_str println" ],
     }
 
     #[test]

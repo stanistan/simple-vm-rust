@@ -57,12 +57,11 @@ fn run(matches: &clap::ArgMatches) -> Result<i32, String> {
     };
 
 
-    let mut machine = attempt!(
-        "creating machine" => Machine::<DefaultSideEffect>::new(
-            program,
-            matches.is_present("step")
-        )
-    );
+    let mut machine = attempt!("creating machine" => Machine::<DefaultSideEffect>::new(program));
+
+    if matches.is_present("step") {
+        machine.enable_step();
+    }
 
     if matches.is_present("dump_ast") {
         println!("{:?}", machine.code);
