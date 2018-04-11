@@ -261,13 +261,6 @@ impl<E: SideEffect> Machine<E> {
         Ok(code)
     }
 
-    /// Given an input string program, this returns a stack
-    /// machine or an error based on not being to create/parse it.
-    pub fn new_for_input(input: &str) -> Result<Self, StackError> {
-        let code = tokenize(input)?;
-        Self::new(code)
-    }
-
     /// Move the instruction pointer to a given address.
     fn jump(&mut self, address: usize) {
         // TODO check for overflow here
