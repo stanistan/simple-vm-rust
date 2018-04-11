@@ -2,7 +2,6 @@ language: rust
 cache: cargo
 script:
     - cargo test
-    - cargo test --features=stats
     - cargo run -- examples/fib 5
 rust:
     - stable

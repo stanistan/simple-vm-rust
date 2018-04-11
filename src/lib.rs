@@ -148,39 +148,11 @@ impl FromStr for StackValue {
     }
 }
 
-/// If used with the feature=stats, this will be a struct populated
-/// with runtime data about how the `Machine` is performing.
-///
-/// Otherwise it is empty!
-#[cfg(feature = "stats")]
-#[derive(Clone, Debug, Default)]
-pub struct RunStats {
-    pub args: Vec<StackValue>,
-    pub instructions: usize,
-    pub calls: usize,
-    pub jumps: usize,
-    pub returns: usize,
-    pub max_stack_size: usize,
-    pub max_stack_heap_size: usize,
-    pub code_size: usize,
-}
-
-/// If used with the feature=stats, this will be a struct populated
-/// with runtime data about how the `Machine` is performing.
-///
-/// Otherwise it is empty!
-#[cfg(not(feature = "stats"))]
-#[derive(Clone, Debug, Default)]
-pub struct RunStats;
-
 pub type Code = Vec<StackValue>;
 
-/// Contains the exit code of the vm program as well
-/// as statistics about its run if `feature=stats` is
-/// set during compilation.
+/// Contains the exit code of the vm program.
 pub struct RunResult {
     pub exit_code: i32,
-    pub stats: RunStats,
 }
 
 #[derive(Copy, Clone)]
@@ -205,16 +177,6 @@ where
     instruction_ptr: usize,
     return_stack: Vec<usize>,
     stack: Vec<StackValue>,
-    stats: RunStats,
-}
-
-macro_rules! stats {
-    (inc $m:ident $field:ident) => {
-        #[cfg(feature = "stats")]
-        {
-            $m.stats.$field += 1;
-        }
-    };
 }
 
 impl<E: SideEffect> Machine<E> {
@@ -230,13 +192,11 @@ impl<E: SideEffect> Machine<E> {
             instruction_ptr: 0,
             return_stack: Vec::new(),
             stack: Vec::with_capacity(len),
-            stats: RunStats::default(),
         })
     }
 
     pub fn reset(&mut self) {
         self.instruction_ptr = 0;
-        self.stats = RunStats::default();
         self.return_stack.drain(..);
         self.stack.drain(..);
     }
@@ -327,12 +287,10 @@ impl<E: SideEffect> Machine<E> {
         use MachineOperation::*;
         match op {
             Call(to) => {
-                stats!(inc self calls);
                 self.return_stack.push(self.instruction_ptr);
                 self.jump(to);
             }
             Jump(to) => {
-                stats!(inc self jumps);
                 self.jump(to);
             }
             Push(val) => self.stack.push(val),
@@ -348,7 +306,6 @@ impl<E: SideEffect> Machine<E> {
             PushMany(values) => self.stack_push(values),
             Return => match self.return_stack.pop() {
                 Some(jump_to) => {
-                    stats!(inc self returns);
                     self.jump(jump_to);
                 }
                 _ => return ops!(ERR EmptyStack Return, return),
@@ -360,13 +317,6 @@ impl<E: SideEffect> Machine<E> {
             Stop(code) => return Ok(StepResult::Stop(code)),
         }
         Ok(StepResult::Continue)
-    }
-
-    /// Set up the stats for this current run call.
-    #[cfg(feature = "stats")]
-    pub fn setup_stats(&mut self, args: Vec<StackValue>) {
-        self.stats.code_size = self.code.heap_size_of_children();
-        self.stats.args = args;
     }
 
     pub fn stack_push(&mut self, mut values: Vec<StackValue>) {
@@ -393,7 +343,7 @@ impl<E: SideEffect> Machine<E> {
         // owns the code that it operates on.
         let value: StackValue = {
             // this is safe because we did the bounds check above.
-            let value: &StackValue = self.code.get(self.instruction_ptr).unwrap();
+            let value: &StackValue = &self.code[self.instruction_ptr];
             self.instruction_ptr += 1;
             if let StackValue::Label(_) = *value {
                 return Ok(StepResult::Continue);
@@ -413,12 +363,8 @@ impl<E: SideEffect> Machine<E> {
         }
     }
 
-    /// Runs the machine with given arguments, and either a Result that might contain
-    /// run stats if this was compiled with `features=stats`, otherwise an StackError
-    /// if this failed for any reason.
+    /// Runs the machine with given arguments,
     pub fn run(&mut self, args: Vec<StackValue>) -> Result<RunResult, StackError> {
-        #[cfg(feature = "stats")]
-        self.setup_stats(args.clone());
 
         self.stack_push(args);
 
@@ -428,20 +374,9 @@ impl<E: SideEffect> Machine<E> {
                 Ok(StepResult::Stop(exit_code)) => {
                     return Ok(RunResult {
                         exit_code,
-                        stats: self.stats.clone(),
                     })
                 }
-                Ok(StepResult::Continue) => {
-                    #[cfg(feature = "stats")]
-                    {
-                        self.stats.instructions += 1;
-                        let stack_size = self.stack.len();
-                        if stack_size > self.stats.max_stack_size {
-                            self.stats.max_stack_size = stack_size;
-                            self.stats.max_stack_heap_size = self.stack.heap_size_of_children();
-                        }
-                    }
-                }
+                Ok(StepResult::Continue) => {},
             }
         }
     }
@@ -450,7 +385,6 @@ impl<E: SideEffect> Machine<E> {
 /// Given a `String` it should break this up into
 /// a list of tokens that can be parsed into `StackValue`.
 pub fn tokenize(input: &str) -> Result<Code, StackError> {
-
     struct ParserState {
         prev_is_escape: bool,
         ignore_til_eol: bool,
@@ -485,7 +419,6 @@ pub fn tokenize(input: &str) -> Result<Code, StackError> {
     };
 
     for c in input.chars() {
-
         if state.ignore_til_eol {
             if c == '\n' {
                 state.ignore_til_eol = false;

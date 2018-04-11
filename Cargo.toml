@@ -10,15 +10,7 @@ path = "src/lib.rs"
 # Let's not mangle symbols.
 debug = true
 
-[features]
-# This will enable usage of the `RunStats` struct during `run`,
-# which keeps track of how many operations there are and
-# the size of the program in memory using "heapsize".
-stats = [ "heapsize" ]
-
 [dependencies]
 clap = "2.31.2"
 failure = "0.1.1"
 failure_derive = "0.1.1"
-
-heapsize = { version = "0.4.2", optional = true }

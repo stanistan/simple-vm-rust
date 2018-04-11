@@ -3,7 +3,7 @@ extern crate simple_vm;
 
 use simple_vm::*;
 use std::fs::File;
-use std::io::prelude::*;
+use std::io::Read;
 
 fn main() {
 
@@ -25,50 +25,35 @@ fn main() {
 
 }
 
+macro_rules! attempt {
+    ($msg:expr => $e:expr) => {
+        match $e {
+            Err(e) => return Err(format!("Error {}... {}", $msg, e)),
+            Ok(v) => v
+        }
+    }
+}
+
+type DefaultMachine = Machine<DefaultSideEffect>;
+
 fn run(matches: &clap::ArgMatches) -> Result<RunResult, String> {
 
     let program = {
-        let mut file = {
-            let file = File::open(&matches.value_of("file").unwrap());
-            if let Err(e) = file {
-                return Err(format!("Could not open file: {}", e));
-            }
-            file.unwrap()
-        };
+        let file_name = matches.value_of("file").unwrap();
+        let mut file = attempt!("opening file" => File::open(&file_name));
         let mut contents = String::new();
-        if let Err(e) = file.read_to_string(&mut contents) {
-            return Err(format!("Could not read file: {}", e));
-        }
-        let code = tokenize(&contents);
-        if let Err(e) = code {
-            return Err(format!("Could not tokenize file: {}", e));
-        }
-        code.unwrap()
+        attempt!("reading file" => file.read_to_string(&mut contents));
+        attempt!("tokenizing file" => tokenize(&contents))
     };
 
     let args = {
-        let tokens = match matches.values_of("args") {
-            None => Ok(vec![]),
-            Some(values) => tokenize(&values.collect::<Vec<_>>().join(" "))
-        };
-        if let Err(e) = tokens {
-            return Err(format!("Could not tokenize args: {}", e));
-        }
-        tokens.unwrap()
+        let args: Vec<_> = matches.values_of("args")
+            .unwrap_or_default()
+            .collect();
+        attempt!("tokenizng args" => tokenize(&args.join(" ")))
     };
 
-    let mut machine = {
-        let machine = Machine::<DefaultSideEffect>::new(program);
-        if let Err(e) = machine {
-            return Err(format!("Could not create Machine: {}", e));
-        }
-        machine.unwrap()
-    };
-
-    match machine.run(args) {
-        Ok(re) => Ok(re),
-        Err(e) => Err(format!("Machine execution failed: {}", e))
-    }
-
+    let mut machine = attempt!("creating machine" => DefaultMachine::new(program));
+    Ok(attempt!("running machine" => machine.run(args)))
 }
 
