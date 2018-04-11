@@ -16,11 +16,8 @@ debug = true
 # the size of the program in memory using "heapsize".
 stats = [ "heapsize" ]
 
-# This will print out stats from jemalloc...
-# see src/bin/run.rs
-mem-usage = [ ]
-
 [dependencies]
+clap = "2.31.2"
 failure = "0.1.1"
 failure_derive = "0.1.1"
 

@@ -1,62 +1,74 @@
-#![cfg_attr(feature = "mem-usage", feature(libc))]
-
+#[macro_use] extern crate clap;
 extern crate simple_vm;
 
 use simple_vm::*;
-
-use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 
-#[cfg(feature = "mem-usage")]
-extern crate libc;
-
-#[cfg(feature = "mem-usage")]
-extern "C" {
-    fn je_stats_print(
-        write_cb: extern "C" fn(*const libc::c_void, *const libc::c_char),
-        cbopaque: *const libc::c_void,
-        opts: *const libc::c_char,
-    );
-}
-
-#[cfg(feature = "mem-usage")]
-extern "C" fn write_cb(_: *const libc::c_void, message: *const libc::c_char) {
-    print!(
-        "{}",
-        String::from_utf8_lossy(unsafe {
-            std::ffi::CStr::from_ptr(message as *const i8).to_bytes()
-        })
-    );
-}
-
 fn main() {
-    let file_path: String = env::args().skip(1).take(1).collect();
-    if file_path.is_empty() {
-        panic!("Expected a file path");
+
+    let matches = clap_app!(simple_vm_bin =>
+        (version: crate_version!())
+        (author: crate_authors!())
+        (about: "A simple stack based vm.")
+        (@arg file: +required "Input file of the program to run")
+        (@arg args: +multiple "args to pass to the program")
+    ).get_matches();
+
+    match run(&matches) {
+        Ok(response) => std::process::exit(response.exit_code),
+        Err(e) => {
+            eprintln!("{:?}", e);
+            std::process::exit(1);
+        }
     }
 
-    let script_args: Vec<String> = env::args().skip(2).collect();
-    let args = tokenize(&script_args.join(" ")).expect("could not parse args");
+}
 
-    let mut f = File::open(&file_path).expect("File does not exist");
-    let mut contents = String::new();
-    f.read_to_string(&mut contents)
-        .expect("Reading the file failed");
+fn run(matches: &clap::ArgMatches) -> Result<RunResult, String> {
 
-    let code = tokenize(&contents).expect("Could not tokenize file contents");
-    let mut machine = Machine::<DefaultSideEffect>::new(code).expect("Could not create machine.");
-
-    #[allow(unused_variables)]
-    let response = machine.run(args).expect("Code execution failed");
-
-    #[cfg(feature = "stats")]
-    println!("{:#?}", response.stats);
-
-    #[cfg(feature = "mem-usage")]
-    unsafe {
-        je_stats_print(write_cb, std::ptr::null(), std::ptr::null())
+    let program = {
+        let mut file = {
+            let file = File::open(&matches.value_of("file").unwrap());
+            if let Err(e) = file {
+                return Err(format!("Could not open file: {}", e));
+            }
+            file.unwrap()
+        };
+        let mut contents = String::new();
+        if let Err(e) = file.read_to_string(&mut contents) {
+            return Err(format!("Could not read file: {}", e));
+        }
+        let code = tokenize(&contents);
+        if let Err(e) = code {
+            return Err(format!("Could not tokenize file: {}", e));
+        }
+        code.unwrap()
     };
 
-    std::process::exit(response.exit_code);
+    let args = {
+        let tokens = match matches.values_of("args") {
+            None => Ok(vec![]),
+            Some(values) => tokenize(&values.collect::<Vec<_>>().join(" "))
+        };
+        if let Err(e) = tokens {
+            return Err(format!("Could not tokenize args: {}", e));
+        }
+        tokens.unwrap()
+    };
+
+    let mut machine = {
+        let machine = Machine::<DefaultSideEffect>::new(program);
+        if let Err(e) = machine {
+            return Err(format!("Could not create Machine: {}", e));
+        }
+        machine.unwrap()
+    };
+
+    match machine.run(args) {
+        Ok(re) => Ok(re),
+        Err(e) => Err(format!("Machine execution failed: {}", e))
+    }
+
 }
+
