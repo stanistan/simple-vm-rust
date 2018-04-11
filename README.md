@@ -52,12 +52,6 @@ Run this in release mode.
 cargo run --release -- examples/fib 5
 ```
 
-Run this with `stats`, and `mem-usage` outputs, assuming you have [`rustup`](https://www.rustup.rs):
-
-```sh
-rustup run nightly cargo run --release --features=stats,mem-usage -- examples/fib 5
-```
-
 ## Benchmarking & Profiling
 
 Use [`cargo benchcmp`](https://github.com/BurntSushi/cargo-benchcmp) for bench comparisons.
