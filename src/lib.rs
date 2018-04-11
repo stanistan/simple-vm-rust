@@ -75,21 +75,6 @@ ops! {
     Return return () Return,
 }
 
-#[cfg(feature = "stats")]
-impl HeapSizeOf for StackValue {
-    fn heap_size_of_children(&self) -> usize {
-        use StackValue::*;
-        match *self {
-            Bool(ref b) => b.heap_size_of_children(),
-            Num(ref n) => n.heap_size_of_children(),
-            Label(ref s) => s.heap_size_of_children(),
-            Operation(ref o) => o.heap_size_of_children(),
-            String(ref s) => s.heap_size_of_children(),
-            PossibleLabel(ref s) => s.heap_size_of_children(),
-        }
-    }
-}
-
 /// A value that can live on the stack.
 #[derive(Clone, PartialEq, Debug)]
 pub enum StackValue {
