@@ -1,11 +1,5 @@
 extern crate failure;
-#[macro_use]
-extern crate failure_derive;
-
-#[cfg(feature = "stats")]
-extern crate heapsize;
-#[cfg(feature = "stats")]
-use heapsize::*;
+#[macro_use] extern crate failure_derive;
 
 use std::collections::HashMap;
 use std::str::FromStr;
