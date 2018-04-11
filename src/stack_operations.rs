@@ -61,9 +61,11 @@ macro_rules! ops {
     // and need to pop one last value off of the stack.
     (MATCH $machine:ident, $e:expr, $t:pat) => {
         match ops!(POP $machine) {
-            Some($t) => ops!(MATCH $machine, $e,),
             None => ops!(ERR EmptyStack $t, $e),
-            _ => ops!(ERR PatternMismatch $t, $e),
+            Some(a) => match a {
+                $t => ops!(MATCH $machine, $e,),
+                _ => ops!(ERR PatternMismatch $t, $e),
+            },
         }
     };
 
@@ -76,9 +78,11 @@ macro_rules! ops {
     // continue to recurse with the $rest.
     (MATCH $machine:ident, $e:expr, $t:pat, $($rest:pat),*) => {
         match ops!(POP $machine) {
-            Some($t) => ops!(MATCH $machine, $e, $($rest),*),
             None => ops!(ERR EmptyStack $t, $e),
-            _ => ops!(ERR PatternMismatch $t, $e),
+            Some(a) => match a {
+                $t => ops!(MATCH $machine, $e, $($rest),*),
+                _ => ops!(ERR PatternMismatch $t, $e),
+            },
         }
     };
 

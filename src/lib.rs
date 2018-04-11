@@ -17,6 +17,7 @@ pub mod stack_operations;
 ///
 /// These are the operations that `StackOperation` is built on
 /// and what they return to the machine.
+#[derive(Debug)]
 pub enum MachineOperation {
     /// Adds the current `instruction_ptr` to the return stack and
     /// jumps to `usize`.
@@ -93,7 +94,7 @@ impl std::fmt::Display for StackValue {
             Bool(b) => b.fmt(f),
             Num(n) => n.fmt(f),
             Label(ref n) => write!(f, "{}:", n),
-            String(ref s) => write!(f, "\"{}\"", s),
+            String(ref s) => write!(f, "{}", s),
             Operation(ref op) => write!(f, "<op:{:?}>", op),
             PossibleLabel(ref s) => s.fmt(f),
         }
@@ -150,7 +151,8 @@ where
     E: SideEffect,
 {
     effect: E,
-    code: Code,
+    pub code: Code,
+    step: bool,
     instruction_ptr: usize,
     return_stack: Vec<usize>,
     stack: Vec<StackValue>,
@@ -160,11 +162,12 @@ impl<E: SideEffect> Machine<E> {
     /// Create a new machine for the code.
     ///
     /// This runs through a `preprocess` step.
-    pub fn new(code: Code) -> Result<Self, StackError> {
+    pub fn new(code: Code, step: bool) -> Result<Self, StackError> {
         let code = Self::preprocess(code)?;
         let len = code.len();
         Ok(Machine {
             effect: E::default(),
+            step,
             code,
             instruction_ptr: 0,
             return_stack: Vec::new(),
@@ -254,7 +257,20 @@ impl<E: SideEffect> Machine<E> {
     ///
     /// Returns an Error or a StepResult indicating how this loop should continue.
     pub fn dispatch(&mut self, op: MachineOperation) -> Result<StepResult, StackError> {
+
         use MachineOperation::*;
+
+        if self.step {
+            macro_rules! debug_step {
+                ($($e:expr),*) => {
+                    $(self.effect.println(StackValue::String(format!("{}:\t{:?}", stringify!($e), $e)));)*
+                };
+            }
+            debug_step![op, self.code[self.instruction_ptr - 1], self.stack, self.return_stack];
+            self.effect.println(StackValue::String(String::from("...")));
+            self.effect.read_line();
+        }
+
         match op {
             Call(to) => {
                 self.return_stack.push(self.instruction_ptr);
@@ -353,6 +369,7 @@ impl<E: SideEffect> Machine<E> {
 /// Given a `String` it should break this up into
 /// a list of tokens that can be parsed into `StackValue`.
 pub fn tokenize(input: &str) -> Result<Code, StackError> {
+
     struct ParserState {
         prev_is_escape: bool,
         ignore_til_eol: bool,
@@ -563,11 +580,15 @@ mod tests {
 
     }
 
+    fn empty_stack() -> Vec<StackValue> {
+        vec![]
+    }
+
     test_run! { [full_stack]
         test_addition_dup 0, vec![Num(2), Num(2)], [ "1 1 + dup" ],
         test_addition_dup2 0, vec![Num(2), Num(2), Num(2)], [ "1 1 + dup dup" ],
-        test_exit_code_1 1, { let v: Vec<StackValue> = vec![]; v }, [ "1 exit" ],
-        test_exit_code_0 0, { let v: Vec<StackValue> = vec![]; v }, [ "" ],
+        test_exit_code_1 1, empty_stack(), [ "1 exit" ],
+        test_exit_code_0 0, empty_stack(), [ "" ],
     }
 
     test_run! { [effect]

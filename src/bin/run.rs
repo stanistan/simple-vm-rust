@@ -12,11 +12,14 @@ fn main() {
         (author: crate_authors!())
         (about: "A simple stack based vm.")
         (@arg file: +required "Input file of the program to run")
+        (@arg dump_ast: --ast "Print the Machine's code before running")
+        (@arg no_run: --no_run "Don't execute the program")
+        (@arg step: --step "Step through the program one operation at a time.")
         (@arg args: +multiple "args to pass to the program")
     ).get_matches();
 
     match run(&matches) {
-        Ok(response) => std::process::exit(response.exit_code),
+        Ok(exit_code) => std::process::exit(exit_code),
         Err(e) => {
             eprintln!("{:?}", e);
             std::process::exit(1);
@@ -25,6 +28,7 @@ fn main() {
 
 }
 
+/// Like `try!` but will transform all `Err(e)` into `Err(String)`
 macro_rules! attempt {
     ($msg:expr => $e:expr) => {
         match $e {
@@ -34,9 +38,8 @@ macro_rules! attempt {
     }
 }
 
-type DefaultMachine = Machine<DefaultSideEffect>;
-
-fn run(matches: &clap::ArgMatches) -> Result<RunResult, String> {
+/// Attempts to actually run the program
+fn run(matches: &clap::ArgMatches) -> Result<i32, String> {
 
     let program = {
         let file_name = matches.value_of("file").unwrap();
@@ -53,7 +56,23 @@ fn run(matches: &clap::ArgMatches) -> Result<RunResult, String> {
         attempt!("tokenizng args" => tokenize(&args.join(" ")))
     };
 
-    let mut machine = attempt!("creating machine" => DefaultMachine::new(program));
-    Ok(attempt!("running machine" => machine.run(args)))
+
+    let mut machine = attempt!(
+        "creating machine" => Machine::<DefaultSideEffect>::new(
+            program,
+            matches.is_present("step")
+        )
+    );
+
+    if matches.is_present("dump_ast") {
+        println!("{:?}", machine.code);
+    }
+
+    let mut exit_code = 0;
+    if !matches.is_present("no_run") {
+        exit_code = attempt!("running machine" => machine.run(args)).exit_code;
+    }
+
+    Ok(exit_code)
 }
 
