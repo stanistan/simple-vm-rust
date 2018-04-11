@@ -84,83 +84,9 @@ and just straight up might not work at all, but it is [usable elsewhere](https:/
 We are also using [BrendanGregg/FlameGraph](https://github.com/brendangregg/FlameGraph), so that should be somewhere
 in your `$PATH`.
 
-##### Weirdness
-
-I'm trying to get minimum buildtime for the profiling docker image by following something similar to [this post](https://whitfin.io/speeding-up-rust-docker-builds/).
-While that works well for building out the lib and main image, it seems to be failing with compiler errors for things
-inside of `src/bin/...` and `benches/`.
-
-```
-Compiling simple_vm v0.1.0 (file:///usr/src/simple_vm)
-error[E0433]: failed to resolve. Use of undeclared type or module `Machine`
-  --> src/bin/run.rs:48:23
-   |
-48 |     let mut machine = Machine::new(code).expect("Could not create machine.");
-   |                       ^^^^^^^ Use of undeclared type or module `Machine`
-
-error[E0425]: cannot find function `tokenize` in this scope
-  --> src/bin/run.rs:40:16
-   |
-40 |     let args = tokenize(&script_args.join(" ")).expect("could not parse args");
-   |                ^^^^^^^^ not found in this scope
-
-error[E0425]: cannot find function `tokenize` in this scope
-  --> src/bin/run.rs:47:16
-   |
-47 |     let code = tokenize(&contents).expect("Could not tokenize file contents");
-   |                ^^^^^^^^ not found in this scope
-
-warning: unused import: `simple_vm::*`
- --> src/bin/run.rs:5:5
-  |
-5 | use simple_vm::*;
-  |     ^^^^^^^^^^^^
-  |
-  = note: #[warn(unused_imports)] on by default
-
-error: aborting due to 3 previous errors
-
-Some errors occurred: E0425, E0433.
-For more information about an error, try `rustc --explain E0425`.
-error: Could not compile `simple_vm`.
-
-To learn more, run the command again with --verbose.
-```
-
-##### Notes on the Dockerfile
-
-[`rustlang/rust:nightly`](https://hub.docker.com/r/rustlang/rust/~/dockerfile/) depends on
-[`buildpacks-deps:stretch`](https://github.com/docker-library/buildpack-deps/blob/d7da72aaf3bb93fecf5fcb7c6ff154cb0c55d1d1/stretch/Dockerfile) depends on
-...eventually [`debian:stretch`](https://github.com/debuerreotype/docker-debian-artifacts/blob/603ba998fd1175e70bf3ac5d79a5d2c1ed9a52fe/stretch/Dockerfile),
-which is the same as `debian:jesse` :shrug:
-
-
-__Everything below this currently doesn't work__
-
 ```sh
-prof/run.sh
-```
-
-Or, with more details:
-
-```sh
-docker build -t simple-vm-perf . -f prof/Dockerfile
-```
-
-The Dockerfile will install `perf` so it can be un inside of the container and builds
-out the `simple_vm` project with the `bench/` sub-project.
-
-The first build will be a little expensive since it's going to be downloading all
-of the dependencies, etc, but the Dockerfile is structured in a way to minimize
-re-downloading/compiling everything (unless you're adding or removing dependencies).
-
-- [ ] Use multistage builds
-
-Ok, so once we have that built out we can run it!
-
-```sh
-docker run --privileged -it -v "`pwd`/prof":/prof simple-vm-perf /prof/run.sh fib_10
-cat prof/data/perf.script | stackcollapse-perf.pl | flamegraph.pl > bench.svg
+prof/run.sh fib fib_10
+cat perf.script | stackcollapse-perf.pl | flamegraph.pl > bench.svg
 ```
 
 ![bench.svg](./bench.svg)
